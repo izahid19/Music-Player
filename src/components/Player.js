@@ -4,7 +4,7 @@ import { faPlay, faAngleLeft , faAngleRight } from '@fortawesome/free-solid-svg-
 
 const Player = () => {
   return (
-    <div className='player'>
+    <div className='player-container'>
         <div className='time-control'>
         <p>Start Time</p>
         <input type="range"/>
