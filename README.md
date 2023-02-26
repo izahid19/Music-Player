@@ -12,6 +12,8 @@ Main tech used to complete this project
 2. Sass
 3. Css animations
 4. Media queries for mobile responsive
+
+
 Installation
 1- Clone this repo
 2- Install the dependencies and devDependencies and start the application.
