@@ -7,6 +7,7 @@ Music Player made with React JS, SASS and some CSS animation. This player was ma
 
 
 Main tech used to complete this project
+
 1. React.js
 2. Sass
 3. Css animations
