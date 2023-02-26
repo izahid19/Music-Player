@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Music-Player/static/css/main.99b52d28.css",
+    "main.js": "/Music-Player/static/js/main.525ece49.js",
+    "index.html": "/Music-Player/index.html",
+    "main.99b52d28.css.map": "/Music-Player/static/css/main.99b52d28.css.map",
+    "main.525ece49.js.map": "/Music-Player/static/js/main.525ece49.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.99b52d28.css",
+    "static/js/main.525ece49.js"
+  ]
+}
