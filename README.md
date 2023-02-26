@@ -14,11 +14,15 @@ Main tech used to complete this project
 4. Media queries for mobile responsive
 
 
-Installation
+# Installation
 1- Clone this repo
+
 2- Install the dependencies and devDependencies and start the application.
 
-Using NPM
+# Using NPM
+
 $ cd waves-music-app
+
 $ npm install
+
 $ npm run start
