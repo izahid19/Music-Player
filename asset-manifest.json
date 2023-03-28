@@ -1,17 +1,37 @@
 {
   "files": {
-    "main.css": "/Music-Player/static/css/main.ed5f9517.css",
-    "main.js": "/Music-Player/static/js/main.0c6e421f.js",
+    "main.css": "/Music-Player/static/css/main.8222a2f3.css",
+    "main.js": "/Music-Player/static/js/main.76e818b8.js",
+    "static/media/MoosaMashup.mp3": "/Music-Player/static/media/MoosaMashup.76d5907dda39e895baca.mp3",
+    "static/media/PhirMilenge.mp3": "/Music-Player/static/media/PhirMilenge.b7a045109494e717ba31.mp3",
+    "static/media/GO.mp3": "/Music-Player/static/media/GO.3de2d6d667a45e48ef61.mp3",
+    "static/media/Thagyan.mp3": "/Music-Player/static/media/Thagyan.42cdd640677585b97f0b.mp3",
+    "static/media/YeDunya.mp3": "/Music-Player/static/media/YeDunya.0cf26c04fa5f83be0de3.mp3",
+    "static/media/TibbeyanDaPutt.mp3": "/Music-Player/static/media/TibbeyanDaPutt.536ef9aa5131fb11e26f.mp3",
+    "static/media/SS295.mp3": "/Music-Player/static/media/SS295.efaf63b3da265cdbd762.mp3",
     "static/media/Challa.mp3": "/Music-Player/static/media/Challa.16ab4f451c34533e278d.mp3",
+    "static/media/Pasoori.mp3": "/Music-Player/static/media/Pasoori.ea8bf9c5d96ca83f4e0a.mp3",
+    "static/media/TheLastRide.mp3": "/Music-Player/static/media/TheLastRide.160c0d9bee08c372558b.mp3",
+    "static/media/BuiltDifferent.mp3": "/Music-Player/static/media/BuiltDifferent.324a58fbe8b924afd199.mp3",
+    "static/media/Pagol.mp3": "/Music-Player/static/media/Pagol.9a56fa98e3c29a385b14.mp3",
+    "static/media/GShit.mp3": "/Music-Player/static/media/GShit.d6b6b307915bba9beac6.mp3",
+    "static/media/Levels.mp3": "/Music-Player/static/media/Levels.1926e6fb89759dfeca53.mp3",
+    "static/media/RackAndRound.mp3": "/Music-Player/static/media/RackAndRound.d25d7c9730b81c271069.mp3",
+    "static/media/US.mp3": "/Music-Player/static/media/US.72f4bf2318a2af77e71f.mp3",
+    "static/media/PeechayHutt.mp3": "/Music-Player/static/media/PeechayHutt.dc027691315aab9ad0ba.mp3",
     "static/media/nolove.mp3": "/Music-Player/static/media/nolove.be142df6a6f618ab6b13.mp3",
+    "static/media/CelebrityKiller.mp3": "/Music-Player/static/media/CelebrityKiller.04da4f5f51dd04c3ac7a.mp3",
+    "static/media/TheseDays.mp3": "/Music-Player/static/media/TheseDays.7bebaadfa6fe978c323b.mp3",
+    "static/media/MeandMyGf.mp3": "/Music-Player/static/media/MeandMyGf.a0c575e9389e8c10682e.mp3",
     "static/media/werollin.mp3": "/Music-Player/static/media/werollin.ee38e594c683b387e04e.mp3",
+    "static/media/her.mp3": "/Music-Player/static/media/her.60b681d57e2ced922622.mp3",
     "static/media/Baller.mp3": "/Music-Player/static/media/Baller.162db2ee3187eb039244.mp3",
     "index.html": "/Music-Player/index.html",
-    "main.ed5f9517.css.map": "/Music-Player/static/css/main.ed5f9517.css.map",
-    "main.0c6e421f.js.map": "/Music-Player/static/js/main.0c6e421f.js.map"
+    "main.8222a2f3.css.map": "/Music-Player/static/css/main.8222a2f3.css.map",
+    "main.76e818b8.js.map": "/Music-Player/static/js/main.76e818b8.js.map"
   },
   "entrypoints": [
-    "static/css/main.ed5f9517.css",
-    "static/js/main.0c6e421f.js"
+    "static/css/main.8222a2f3.css",
+    "static/js/main.76e818b8.js"
   ]
 }
