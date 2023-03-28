@@ -1,6 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Baller, Challa, nolove, werollin, her, Pagol, TibbeyanDaPutt, BuiltDifferent, CelebrityKiller,GShit, 
-MeandMyGf, RackAndRound, SS295, TheseDays, US, MoosaMashup, Levels, TheLastRide } from './assets/songs/music'
+import { Baller, Challa, nolove, werollin, her, Pagol,
+   TibbeyanDaPutt, BuiltDifferent, CelebrityKiller,GShit, MeandMyGf, RackAndRound, SS295, TheseDays,
+    US, MoosaMashup, Levels, TheLastRide,
+    GO,Pasoori,PeechayHutt,PhirMilenge,Thagyan,YeDunya } from './assets/songs/music'
 function chillHop() {
   return [
     {
@@ -79,7 +81,7 @@ function chillHop() {
       audio: TibbeyanDaPutt,
       color: ['#CD607D', '#c94043'],
       id: uuidv4(),
-      active: true,
+      active: false,
     },
     {
       name: '295',
@@ -137,7 +139,7 @@ function chillHop() {
       audio: BuiltDifferent,
       color: ['#CD607D', '#c94043'],
       id: uuidv4(),
-      active: true,
+      active: false,
     },
     {
       name: 'Me and My GirlFriend',
@@ -175,6 +177,128 @@ function chillHop() {
       artist: 'SIdhu Moose Wala ft Sunny Malton',
       audio: Levels,
       color: ['#205950', '#2ab3bf'],
+      id: uuidv4(),
+      active: false,
+    },
+    //coke studio
+    {
+      name: "Pasoori",
+      cover:
+        "https://img.wynk.in/unsafe/248x248/filters:no_upscale():strip_exif():format(webp)/http://s3-ap-south-1.amazonaws.com/wynk-music-cms/srch_believe/music/3616847141898/1652121920/srch_believe_A10320WT043491033Z.jpg",
+      artist: "Ali Sethi, Shae Gill",
+      audio: Pasoori,
+      color: ["#205950", "#2ab3bf"],
+      id: uuidv4(),
+      active: false,
+    },
+    {
+      name: "Phir Milengy",
+      cover:
+        "https://img.wynk.in/unsafe/248x248/filters:no_upscale():strip_exif():format(webp)/http://s3-ap-south-1.amazonaws.com/wynk-music-cms/srch_believe/music/3616847141898/1652121920/srch_believe_A10320WT043491033Z.jpg",
+      artist: "Faisal Kapadia, Young Stunner",
+      audio: PhirMilenge,
+      color: ["#EF8EA9", "#ab417f"],
+      id: uuidv4(),
+      active: false,
+    },
+    {
+      name: "GO",
+      cover:
+        "https://img.wynk.in/unsafe/248x248/filters:no_upscale():strip_exif():format(webp)/http://s3-ap-south-1.amazonaws.com/wynk-music-cms/srch_believe/music/3616847141898/1652121920/srch_believe_A10320WT043491033Z.jpg",
+      artist: "Atif Aslam, Abdullah Siddiqui",
+      audio: GO,
+      color: ["#CD607D", "#c94043"],
+      id: uuidv4(),
+      active: false,
+    },
+    {
+      name: "Thagyan",
+      cover:
+        "https://img.wynk.in/unsafe/248x248/filters:no_upscale():strip_exif():format(webp)/http://s3-ap-south-1.amazonaws.com/wynk-music-cms/srch_believe/music/3616847141898/1652121920/srch_believe_A10320WT043491033Z.jpg",
+      artist: "Quratulain Balouch, Zain Zohaib",
+      audio: Thagyan,
+      color: ["#EF8EA9", "#ab417f"],
+      id: uuidv4(),
+      active: false,
+    },
+    {
+      name: "Peechay Hutt",
+      cover:
+        "https://img.wynk.in/unsafe/248x248/filters:no_upscale():strip_exif():format(webp)/http://s3-ap-south-1.amazonaws.com/wynk-music-cms/srch_believe/music/3616847141898/1652121920/srch_believe_A10320WT043491033Z.jpg",
+      artist: "Talal Qureshi",
+      audio: PeechayHutt,
+      color: ["#CD607D", "#c94043"],
+      id: uuidv4(),
+      active: false,
+    },
+    {
+      name: "Yeh Dunya",
+      cover:
+        "https://img.wynk.in/unsafe/248x248/filters:no_upscale():strip_exif():format(webp)/http://s3-ap-south-1.amazonaws.com/wynk-music-cms/srch_believe/music/3616847141898/1652121920/srch_believe_A10320WT043491033Z.jpg",
+      artist: "Talha Anjum",
+      audio: YeDunya,
+      color: ["#205950", "#2ab3bf"],
+      id: uuidv4(),
+      active: false,
+    },
+    // list
+    {
+      name: "Beaver Creek",
+      cover:
+        "https://chillhop.com/wp-content/uploads/2020/09/0255e8b8c74c90d4a27c594b3452b2daafae608d-1024x1024.jpg",
+      artist: "Aso, Middle School, Aviino",
+      audio: "https://mp3.chillhop.com/serve.php/?mp3=10075",
+      color: ["#205950", "#2ab3bf"],
+      id: uuidv4(),
+      active: false,
+    },
+    {
+      name: "Daylight",
+      cover:
+        "https://chillhop.com/wp-content/uploads/2020/07/ef95e219a44869318b7806e9f0f794a1f9c451e4-1024x1024.jpg",
+      artist: "Aiguille",
+      audio: "https://mp3.chillhop.com/serve.php/?mp3=9272",
+      color: ["#EF8EA9", "#ab417f"],
+      id: uuidv4(),
+      active: false,
+    },
+    {
+      name: "Keep Going",
+      cover:
+        "https://chillhop.com/wp-content/uploads/2020/07/ff35dede32321a8aa0953809812941bcf8a6bd35-1024x1024.jpg",
+      artist: "Swørn",
+      audio: "https://mp3.chillhop.com/serve.php/?mp3=9222",
+      color: ["#CD607D", "#c94043"],
+      id: uuidv4(),
+      active: false,
+    },
+    {
+      name: "Nightfall",
+      cover:
+        "https://chillhop.com/wp-content/uploads/2020/07/ef95e219a44869318b7806e9f0f794a1f9c451e4-1024x1024.jpg",
+      artist: "Aiguille",
+      audio: "https://mp3.chillhop.com/serve.php/?mp3=9148",
+      color: ["#EF8EA9", "#ab417f"],
+      id: uuidv4(),
+      active: false,
+    },
+    {
+      name: "Reflection",
+      cover:
+        "https://chillhop.com/wp-content/uploads/2020/07/ff35dede32321a8aa0953809812941bcf8a6bd35-1024x1024.jpg",
+      artist: "Swørn",
+      audio: "https://mp3.chillhop.com/serve.php/?mp3=9228",
+      color: ["#CD607D", "#c94043"],
+      id: uuidv4(),
+      active: false,
+    },
+    {
+      name: "Under the City Stars",
+      cover:
+        "https://chillhop.com/wp-content/uploads/2020/09/0255e8b8c74c90d4a27c594b3452b2daafae608d-1024x1024.jpg",
+      artist: "Aso, Middle School, Aviino",
+      audio: "https://mp3.chillhop.com/serve.php/?mp3=10074",
+      color: ["#205950", "#2ab3bf"],
       id: uuidv4(),
       active: false,
     },
