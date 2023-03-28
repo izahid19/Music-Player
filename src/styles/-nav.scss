@@ -21,6 +21,9 @@ nav {
   
   @media screen and (max-width: 768px) {
     nav {
+      h1{
+        padding-right: 60px;
+      }
       button {
         z-index: 10;
       }
