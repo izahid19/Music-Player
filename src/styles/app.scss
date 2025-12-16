@@ -1,4 +1,36 @@
-* {
+@use "./player";
+@use "./song";
+@use "./library";
+@use "./-nav.scss";
+@use "./landing";
+@use "./admin";
+@use "./not-found";
+
+  :root {
+    --bg-color: #ffffff;
+    --text-color: #363636;
+    --text-secondary: #646464;
+    --accent-color: #22c55e;
+    --player-bg: #ffffff;
+    --shadow-color: rgba(175, 175, 175, 0.2);
+    --input-bg: rgb(204, 204, 204);
+    --hover-bg: rgb(222, 222, 255);
+    --active-song-bg: rgba(141, 202, 238, 0.5);
+  }
+
+  [data-theme='dark'] {
+    --bg-color: #1a1a1a;
+    --text-color: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --accent-color: #4ade80;
+    --player-bg: #2d2d2d;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --input-bg: #4b5563;
+    --hover-bg: #374151;
+    --active-song-bg: #3b82f680;
+  }
+
+  * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -7,18 +39,21 @@
   h1,
   h2,
   h3 {
-    color: rgb(54, 54, 54);
+    color: var(--text-color);
   }
   
   body {
     font-family: "Lato", sans-serif;
     overflow: hidden;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   
   h3,
   h4 {
     font-weight: 400;
-    color: rgb(100, 100, 100);
+    color: var(--text-secondary);
   }
   
   .App {
@@ -26,7 +61,7 @@
   }
   
   .library-active {
-    margin-left: 20rem;
+    margin-right: 20rem;
   }
   
   .ocean {
@@ -78,9 +113,3 @@
       transform: translate3d(0, 5px, 0);
     }
   }
-  
-  @import "./player";
-  @import "./song";
-  @import "./library";
-  @import "./-nav.scss";
-  

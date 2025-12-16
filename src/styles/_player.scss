@@ -4,6 +4,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
+    gap: 1rem;
   }
   
   .time-control {
@@ -21,15 +22,122 @@
       padding: 1rem;
     }
   }
+
   .play-control {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-  
     width: 40%;
+    gap: 1rem;
+  
     svg {
       cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: scale(1.1);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+
+    .shuffle,
+    .repeat,
+    .favorite {
+      color: var(--text-secondary);
+      transition: color 0.3s ease;
+      
+      &.active {
+        color: var(--accent-color);
+      }
+    }
+    
+    .favorite.active {
+      color: #ef4444; // Red for heart
+    }
+
+    .repeat-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .repeat-one-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -6px;
+      font-size: 0.55rem;
+      font-weight: 600;
+      color: var(--accent-color);
+    }
+  }
+
+  .volume-control {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 30%;
+    padding: 0.5rem;
+
+    .volume-icon {
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: var(--text-color);
+      }
+    }
+
+    .volume-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: var(--input-bg);
+      border-radius: 5px;
+      outline: none;
+      cursor: pointer;
+
+      &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        background: var(--text-color);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background 0.2s ease;
+
+        &:hover {
+          background: var(--text-secondary);
+        }
+      }
+
+      &::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        background: var(--text-color);
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+        transition: background 0.2s ease;
+
+        &:hover {
+          background: var(--text-secondary);
+        }
+      }
+    }
+
+    .volume-percentage {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      min-width: 40px;
+      text-align: right;
     }
   }
   
@@ -42,7 +150,7 @@
   }
   
   .animate-track {
-    background: rgb(204, 204, 204);
+    background: var(--input-bg);
     width: 100%;
     height: 100%;
     position: absolute;
@@ -75,6 +183,11 @@
     }
   
     .play-control {
-      width: 60%;
+      width: 80%;
+      gap: 0.5rem;
+    }
+
+    .volume-control {
+      width: 80%;
     }
   }
