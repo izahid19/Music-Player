@@ -1,0 +1,14 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/admin/dashboard/page": "/admin/dashboard",
+  "/admin/login/page": "/admin/login",
+  "/api/auth/logout/route": "/api/auth/logout",
+  "/api/auth/send-otp/route": "/api/auth/send-otp",
+  "/api/auth/verify-otp/route": "/api/auth/verify-otp",
+  "/api/songs/[id]/route": "/api/songs/[id]",
+  "/api/songs/route": "/api/songs",
+  "/api/upload/route": "/api/upload",
+  "/music/page": "/music",
+  "/page": "/"
+}

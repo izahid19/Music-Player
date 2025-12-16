@@ -1,40 +1,65 @@
 .song-container {
-    min-height: 60vh;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  
+  img {
+    width: 20%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .song-info {
     display: flex;
     align-items: center;
-    flex-direction: column;
     justify-content: center;
-    img {
-      width: 20%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
+    gap: 1rem;
+    padding: 3rem 1rem 1rem 1rem;
+    
     h2 {
-      padding: 3rem 1rem 1rem 1rem;
+      padding: 0;
+      margin: 0;
     }
-    h3 {
-      font-size: 1rem;
-    }
-  }
-  
-  .song-playing {
-    animation: rotation 30s infinite linear;
-  }
-  
-  @keyframes rotation {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(359deg);
-    }
-  }
-  
-  @media screen and (max-width: 768px) {
-    .song-container {
-      img {
-        width: 60%;
+
+    .favorite {
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.3s ease;
+      
+      &.active {
+        color: #ef4444;
+      }
+      
+      &:hover {
+        transform: scale(1.1);
       }
     }
   }
-  
+
+  h3 {
+    font-size: 1rem;
+  }
+}
+
+.song-playing {
+  animation: rotation 30s infinite linear;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .song-container {
+    img {
+      width: 60%;
+    }
+  }
+}
