@@ -11,6 +11,7 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
 
   // Theme state management
   const [theme, setTheme] = useState(() => {
@@ -25,8 +26,25 @@ export default function AdminLoginPage() {
     document.body.setAttribute('data-theme', theme);
   }, [theme]);
 
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Countdown timer for resend OTP
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setLoading(true);
     setError('');
 
@@ -40,11 +58,49 @@ export default function AdminLoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle rate limit error
+        if (data.retryAfter) {
+          setResendTimer(data.retryAfter);
+        }
         throw new Error(data.error || 'Failed to send OTP');
       }
 
       setSuccess('OTP sent to your email!');
       setStep('otp');
+      setResendTimer(120); // Start 2 minute timer
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0) return;
+    
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    setOtp('');
+
+    try {
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.retryAfter) {
+          setResendTimer(data.retryAfter);
+        }
+        throw new Error(data.error || 'Failed to send OTP');
+      }
+
+      setSuccess('New OTP sent to your email!');
+      setResendTimer(120); // Reset 2 minute timer
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -131,6 +187,7 @@ export default function AdminLoginPage() {
                 maxLength={6}
                 autoFocus
               />
+              <p className="otp-hint">OTP valid for 10 minutes</p>
             </div>
             <button
               type="submit"
@@ -139,6 +196,24 @@ export default function AdminLoginPage() {
             >
               {loading ? 'Verifying...' : 'Verify & Login'}
             </button>
+            
+            <div className="resend-section">
+              {resendTimer > 0 ? (
+                <p className="resend-timer">
+                  Resend OTP in <span>{formatTime(resendTimer)}</span>
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  className="resend-btn"
+                  onClick={handleResendOtp}
+                  disabled={loading}
+                >
+                  Resend OTP
+                </button>
+              )}
+            </div>
+
             <button
               type="button"
               className="back-btn"
@@ -147,6 +222,7 @@ export default function AdminLoginPage() {
                 setOtp('');
                 setError('');
                 setSuccess('');
+                setResendTimer(0);
               }}
             >
               ← Back to email

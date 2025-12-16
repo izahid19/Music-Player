@@ -56,18 +56,8 @@
     position: relative;
   }
   
-  .library-active {
-    padding-right: 24rem; // Using padding to shrink content area instead of margin
-    // Move nav/song/player to left? No, they stay centered in available space
-  }
-  
-  @media screen and (max-width: 768px) {
-    .library-active {
-        padding-right: 0; // On mobile, library usually overlays or takes full screen
-        // If library is 100% width on mobile, we don't need padding-right
-        // But need to handle library z-index
-    }
-  }
+  // Library overlays content instead of pushing it
+  // Removed: .library-active with padding-right to prevent content shifting
   
   .ocean {
     height: 5%;

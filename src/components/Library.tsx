@@ -3,7 +3,18 @@ import LibrarySong from './LibrarySong';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faSearch, faHeart } from '@fortawesome/free-solid-svg-icons';
 
-const Library = ({
+interface LibraryProps {
+  songs: any[];
+  setCurrentSong: (song: any) => void;
+  audioRef: React.RefObject<HTMLAudioElement>;
+  isPlaying: boolean;
+  setSongs: (songs: any[]) => void;
+  libraryStatus: boolean;
+  setLibraryStatus: (status: boolean) => void;
+  favorites?: string[];
+}
+
+const Library: React.FC<LibraryProps> = ({
   songs,
   setCurrentSong,
   audioRef,
@@ -23,11 +34,23 @@ const Library = ({
       return matchesSearch && matchesFavorite;
   }) : [];
 
+  const handleClose = () => {
+    console.log('Close button clicked');
+    setLibraryStatus(false);
+  };
+
   return (
     <div className={`library ${libraryStatus ? 'active-library' : ''}`}>
       <div className="library-header">
         <h2>Library <span className="song-count">({songs ? songs.length : 0} songs)</span></h2>
-         <FontAwesomeIcon icon={faTimes} onClick={() => setLibraryStatus(false)} size="lg" style={{cursor: 'pointer'}} />
+        <button 
+          className="close-btn"
+          onClick={handleClose}
+          type="button"
+          aria-label="Close library"
+        >
+          <FontAwesomeIcon icon={faTimes} size="lg" />
+        </button>
       </div>
       
       <div className="search-container">

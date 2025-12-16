@@ -21,6 +21,7 @@ import {
   faChevronRight,
   faLink,
   faImage,
+  faUser,
 } from '@fortawesome/free-solid-svg-icons';
 import { defaultCoverImages } from '@/util';
 
@@ -80,6 +81,10 @@ export default function AdminDashboardPage() {
   const [showCoverPicker, setShowCoverPicker] = useState(false);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [adminEmail, setAdminEmail] = useState<string>('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingSongId, setDeletingSongId] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
 
 
@@ -108,8 +113,27 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
+    // Check authentication
+    const checkAuth = () => {
+      const cookies = document.cookie.split(';');
+      const hasToken = cookies.some(cookie => cookie.trim().startsWith('admin_token='));
+      if (!hasToken) {
+        router.replace('/admin/login');
+        return false;
+      }
+      return true;
+    };
+    
+    if (!checkAuth()) return;
+
     fetchSongs(pagination.page, searchQuery);
-  }, []);
+    
+    // Fetch admin email
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => setAdminEmail(data.email || ''))
+      .catch(() => {});
+  }, [router]);
 
   // Debounced search
   const handleSearchChange = (value: string) => {
@@ -131,7 +155,11 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
     document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     router.push('/admin/login');
   };
@@ -236,11 +264,16 @@ export default function AdminDashboardPage() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this song?')) return;
+  const handleDelete = (id: string) => {
+    setDeletingSongId(id);
+    setShowDeleteConfirm(true);
+  };
 
+  const confirmDelete = async () => {
+    if (!deletingSongId) return;
+    
     try {
-      const response = await fetch(`/api/songs/${id}`, {
+      const response = await fetch(`/api/songs/${deletingSongId}`, {
         method: 'DELETE',
       });
 
@@ -252,6 +285,9 @@ export default function AdminDashboardPage() {
       await fetchSongs(pagination.page, searchQuery);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setShowDeleteConfirm(false);
+      setDeletingSongId(null);
     }
   };
 
@@ -266,43 +302,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="admin-dashboard-new">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <div className="logo-icon">
-              <FontAwesomeIcon icon={faMusic} />
-            </div>
-            <span>Playyly</span>
-          </div>
-        </div>
 
-        <nav className="sidebar-nav">
-          <div className="nav-section">
-            <span className="nav-label">Menu</span>
-            <a href="#" className="nav-item active">
-              <FontAwesomeIcon icon={faHome} />
-              <span>Overview</span>
-            </a>
-            <a href="#" className="nav-item">
-              <FontAwesomeIcon icon={faCompactDisc} />
-              <span>Music Library</span>
-            </a>
-            <a href="#" className="nav-item">
-              <FontAwesomeIcon icon={faUpload} />
-              <span>Upload</span>
-            </a>
-          </div>
-        </nav>
-
-        <div className="sidebar-footer">
-          <a href="#" className="nav-item">
-            <FontAwesomeIcon icon={faGear} />
-            <span>Settings</span>
-          </a>
-
-        </div>
-      </aside>
 
       {/* Main Content */}
       <div className="main-content">
@@ -313,6 +313,12 @@ export default function AdminDashboardPage() {
             <p>Manage your music library</p>
           </div>
           <div className="header-actions">
+            <div className="user-profile">
+              <div className="user-avatar">
+                <FontAwesomeIcon icon={faUser} />
+              </div>
+              <span className="user-email">{adminEmail}</span>
+            </div>
             <button className="logout-btn" onClick={handleLogout}>
               <FontAwesomeIcon icon={faSignOutAlt} />
               <span>Logout</span>
@@ -371,9 +377,61 @@ export default function AdminDashboardPage() {
             </div>
 
             {loading ? (
-              <div className="loading">
-                <FontAwesomeIcon icon={faSpinner} spin size="2x" />
-              </div>
+              <>
+                {/* Desktop Skeleton */}
+                <div className="table-container desktop-only">
+                  <table className="songs-table">
+                    <thead>
+                      <tr>
+                        <th>Song Name</th>
+                        <th>Artist</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <tr key={i} className="skeleton-row">
+                          <td>
+                            <div className="skeleton-cell">
+                              <div className="skeleton skeleton-thumb"></div>
+                              <div className="skeleton skeleton-text"></div>
+                            </div>
+                          </td>
+                          <td><div className="skeleton skeleton-text-short"></div></td>
+                          <td><div className="skeleton skeleton-badge"></div></td>
+                          <td>
+                            <div className="skeleton-actions">
+                              <div className="skeleton skeleton-btn"></div>
+                              <div className="skeleton skeleton-btn"></div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Skeleton */}
+                <div className="cards-container mobile-only">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div className="song-card skeleton-card" key={i}>
+                      <div className="card-top">
+                        <div className="skeleton skeleton-cover"></div>
+                        <div className="card-info">
+                          <div className="skeleton skeleton-title"></div>
+                          <div className="skeleton skeleton-subtitle"></div>
+                          <div className="skeleton skeleton-badge"></div>
+                        </div>
+                      </div>
+                      <div className="card-actions">
+                        <div className="skeleton skeleton-action-btn"></div>
+                        <div className="skeleton skeleton-action-btn"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : songs.length === 0 ? (
               <div className="empty-state">
                 <FontAwesomeIcon icon={faMusic} size="2x" />
@@ -382,7 +440,8 @@ export default function AdminDashboardPage() {
               </div>
             ) : (
               <>
-                <div className="table-container">
+                {/* Desktop Table View */}
+                <div className="table-container desktop-only">
                   <table className="songs-table">
                     <thead>
                       <tr>
@@ -419,6 +478,30 @@ export default function AdminDashboardPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="cards-container mobile-only">
+                  {songs.map((song) => (
+                    <div className="song-card" key={song.id}>
+                      <div className="card-top">
+                        <img src={song.cover} alt={song.name} className="card-cover" />
+                        <div className="card-info">
+                          <h4 className="card-title">{song.name}</h4>
+                          <p className="card-artist">{song.artist}</p>
+                          <span className="status-badge active">Active</span>
+                        </div>
+                      </div>
+                      <div className="card-actions">
+                        <button className="action-btn edit" onClick={() => handleEdit(song)}>
+                          <FontAwesomeIcon icon={faEdit} /> Edit
+                        </button>
+                        <button className="action-btn delete" onClick={() => handleDelete(song.id)}>
+                          <FontAwesomeIcon icon={faTrash} /> Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Pagination */}
@@ -633,6 +716,48 @@ export default function AdminDashboardPage() {
                   )}
                 </button>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon delete">
+              <FontAwesomeIcon icon={faTrash} />
+            </div>
+            <h3>Delete Song</h3>
+            <p>Are you sure you want to delete this song? This action cannot be undone.</p>
+            <div className="confirm-actions">
+              <button className="cancel-btn" onClick={() => setShowDeleteConfirm(false)}>
+                Cancel
+              </button>
+              <button className="delete-btn" onClick={confirmDelete}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="modal-overlay" onClick={() => setShowLogoutConfirm(false)}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon logout">
+              <FontAwesomeIcon icon={faSignOutAlt} />
+            </div>
+            <h3>Logout</h3>
+            <p>Are you sure you want to logout from the admin dashboard?</p>
+            <div className="confirm-actions">
+              <button className="cancel-btn" onClick={() => setShowLogoutConfirm(false)}>
+                Cancel
+              </button>
+              <button className="logout-confirm-btn" onClick={confirmLogout}>
+                Logout
+              </button>
             </div>
           </div>
         </div>

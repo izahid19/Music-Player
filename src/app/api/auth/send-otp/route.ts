@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Otp from '@/models/Otp';
+import redis from '@/lib/redis';
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY!;
 const FROM_EMAIL = process.env.FROM_EMAIL!;
 const FROM_NAME = process.env.FROM_NAME!;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL!;
+
+const OTP_EXPIRY_SECONDS = 10 * 60; // 10 minutes
+const RATE_LIMIT_SECONDS = 2 * 60; // 2 minutes
 
 function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -33,13 +35,13 @@ async function sendEmailWithBrevo(to: string, otp: string): Promise<boolean> {
       subject: `Your Playyly Admin Login OTP: ${otp}`,
       htmlContent: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #667eea; text-align: center;">Playyly Admin</h1>
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center;">
-            <h2 style="color: white; margin: 0;">Your One-Time Password</h2>
-            <p style="font-size: 48px; font-weight: bold; color: white; letter-spacing: 8px; margin: 20px 0;">${otp}</p>
-            <p style="color: rgba(255,255,255,0.8); margin: 0;">This code expires in 5 minutes</p>
+          <h1 style="color: #667eea; text-align: center; font-size: 24px;">Playyly Admin</h1>
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 20px; border-radius: 10px; text-align: center;">
+            <h2 style="color: white; margin: 0; font-size: 18px;">Your One-Time Password</h2>
+            <p style="font-size: 32px; font-weight: bold; color: white; letter-spacing: 6px; margin: 20px 0;">${otp}</p>
+            <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 14px;">This code expires in 10 minutes</p>
           </div>
-          <p style="color: #666; text-align: center; margin-top: 20px;">
+          <p style="color: #666; text-align: center; margin-top: 20px; font-size: 13px;">
             If you didn't request this code, please ignore this email.
           </p>
         </div>
@@ -53,33 +55,48 @@ async function sendEmailWithBrevo(to: string, otp: string): Promise<boolean> {
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json();
+    const emailLower = email.toLowerCase();
 
     // Only allow admin email
-    if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    if (emailLower !== ADMIN_EMAIL.toLowerCase()) {
       return NextResponse.json(
         { error: 'Unauthorized email address' },
         { status: 403 }
       );
     }
 
-    await dbConnect();
-
-    // Delete any existing OTPs for this email
-    await Otp.deleteMany({ email: email.toLowerCase() });
+    // Check rate limit - can only request OTP every 2 minutes
+    const rateLimitKey = `otp_rate_limit:${emailLower}`;
+    const lastRequest = await redis.get(rateLimitKey);
+    
+    if (lastRequest) {
+      const ttl = await redis.ttl(rateLimitKey);
+      return NextResponse.json(
+        { 
+          error: `Please wait ${Math.ceil(ttl / 60)} minute(s) before requesting a new OTP`,
+          retryAfter: ttl 
+        },
+        { status: 429 }
+      );
+    }
 
     // Generate new OTP
     const otp = generateOTP();
 
-    // Save OTP to database
-    await Otp.create({
-      email: email.toLowerCase(),
-      otp,
-    });
+    // Store OTP in Redis with 10 minute expiry
+    const otpKey = `otp:${emailLower}`;
+    await redis.set(otpKey, otp, { ex: OTP_EXPIRY_SECONDS });
+
+    // Set rate limit for 2 minutes
+    await redis.set(rateLimitKey, '1', { ex: RATE_LIMIT_SECONDS });
 
     // Send OTP via Brevo
     const emailSent = await sendEmailWithBrevo(email, otp);
 
     if (!emailSent) {
+      // Clean up if email fails
+      await redis.del(otpKey);
+      await redis.del(rateLimitKey);
       return NextResponse.json(
         { error: 'Failed to send OTP email' },
         { status: 500 }
@@ -89,6 +106,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'OTP sent successfully',
+      expiresIn: OTP_EXPIRY_SECONDS,
     });
   } catch (error) {
     console.error('Send OTP error:', error);

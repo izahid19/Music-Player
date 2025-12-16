@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Otp from '@/models/Otp';
+import redis from '@/lib/redis';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -9,37 +8,46 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL!;
 export async function POST(request: NextRequest) {
   try {
     const { email, otp } = await request.json();
+    const emailLower = email.toLowerCase();
 
     // Only allow admin email
-    if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    if (emailLower !== ADMIN_EMAIL.toLowerCase()) {
       return NextResponse.json(
         { error: 'Unauthorized email address' },
         { status: 403 }
       );
     }
 
-    await dbConnect();
+    // Get OTP from Redis
+    const otpKey = `otp:${emailLower}`;
+    const storedOtp = await redis.get(otpKey);
 
-    // Find OTP in database
-    const otpRecord = await Otp.findOne({
-      email: email.toLowerCase(),
-      otp,
-    });
-
-    if (!otpRecord) {
+    if (!storedOtp) {
       return NextResponse.json(
-        { error: 'Invalid or expired OTP' },
+        { error: 'OTP expired. Please request a new one.' },
         { status: 401 }
       );
     }
 
-    // Delete used OTP
-    await Otp.deleteOne({ _id: otpRecord._id });
+    // Compare OTPs (convert to string and trim for safety)
+    const storedOtpStr = String(storedOtp).trim();
+    const inputOtpStr = String(otp).trim();
+
+    if (storedOtpStr !== inputOtpStr) {
+      return NextResponse.json(
+        { error: 'Invalid OTP' },
+        { status: 401 }
+      );
+    }
+
+    // Delete used OTP and rate limit
+    await redis.del(otpKey);
+    await redis.del(`otp_rate_limit:${emailLower}`);
 
     // Create JWT token
     const token = jwt.sign(
       {
-        email: email.toLowerCase(),
+        email: emailLower,
         role: 'admin',
       },
       JWT_SECRET,

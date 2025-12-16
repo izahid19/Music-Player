@@ -373,6 +373,7 @@ function MusicPlayer() {
       <Nav
         libraryStatus={libraryStatus}
         setLibraryStatus={setLibraryStatus}
+        hideLibrary={libraryStatus}
       />
       <SongComponent
         currentSong={currentSong}
