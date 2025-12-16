@@ -1,3 +1,10 @@
+# Dependencies
+node_modules
+
+# Next.js build output
+.next
+out
+
 # Logs
 logs
 *.log
@@ -7,9 +14,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 *.local
 
 # Editor directories and files
@@ -22,3 +32,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build outputs
+dist
+dist-ssr
+build
+
+# Testing
+coverage
+
+# Misc
+.vercel
+*.tsbuildinfo
