@@ -1,4 +1,9 @@
 nav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
     min-height: 10vh;
     display: flex;
     justify-content: space-around;
@@ -71,17 +76,23 @@ nav {
   
   @media screen and (max-width: 768px) {
     nav {
-      flex-direction: column;
-      padding: 1rem 0;
+      flex-direction: row; // Keep row layout on mobile
+      justify-content: space-between;
+      padding: 1rem; // Add side padding
       
       h1 {
-        margin-bottom: 1rem;
-        padding-right: 0;
+        margin-bottom: 0;
+        font-size: 1.2rem; // Smaller font
       }
 
       .nav-buttons {
-        width: 100%;
-        justify-content: center;
+        width: auto;
+        justify-content: flex-end;
+        
+        button {
+          font-size: 0.9rem;
+          padding: 0.4rem 0.8rem;
+        }
       }
       
       button {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -11,17 +11,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 const NotFound = () => {
-  // Theme state management
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('musicPlayerTheme') || 'light';
-    }
-    return 'light';
-  });
-
-  useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
-  }, [theme]);
 
   // Animation Variants
   const containerVariants = {

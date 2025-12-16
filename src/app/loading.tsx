@@ -1,20 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMusic } from '@fortawesome/free-solid-svg-icons';
 
 export default function Loading() {
-  const [theme, setTheme] = useState('light');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setTheme(localStorage.getItem('musicPlayerTheme') || 'light');
-      document.body.setAttribute('data-theme', theme);
-    }
-  }, [theme]);
-
   return (
     <div className="loading-page">
       {/* Animated Background */}

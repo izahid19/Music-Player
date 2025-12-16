@@ -36,13 +36,7 @@ function MusicPlayer() {
     animationPercentage: 0,
   });
   const [libraryStatus, setLibraryStatus] = useState(false);
-  const [volume, setVolume] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('musicPlayerVolume');
-      return saved !== null ? parseFloat(saved) : 0.3;
-    }
-    return 0.3;
-  });
+  const [volume, setVolume] = useState(0.2); // Default volume 20%
   const [isMuted, setIsMuted] = useState(false);
   const [isShuffled, setIsShuffled] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -56,12 +50,7 @@ function MusicPlayer() {
     }
     return 'off';
   });
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('musicPlayerTheme') || 'light';
-    }
-    return 'light';
-  });
+
   const [favorites, setFavorites] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('musicPlayerFavorites');
@@ -117,15 +106,7 @@ function MusicPlayer() {
     localStorage.setItem('musicPlayerFavorites', JSON.stringify(favorites));
   }, [favorites]);
 
-  // Theme Persistence
-  useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('musicPlayerTheme', theme);
-  }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme((prevTheme: string) => (prevTheme === 'light' ? 'dark' : 'light'));
-  };
 
   const toggleFavorite = (songId: string) => {
     if (favorites.includes(songId)) {
@@ -392,8 +373,6 @@ function MusicPlayer() {
       <Nav
         libraryStatus={libraryStatus}
         setLibraryStatus={setLibraryStatus}
-        theme={theme}
-        toggleTheme={toggleTheme}
       />
       <SongComponent
         currentSong={currentSong}
@@ -419,9 +398,6 @@ function MusicPlayer() {
         setIsShuffled={setIsShuffled}
         repeatMode={repeatMode}
         setRepeatMode={setRepeatMode}
-        skipTrack={skipTrack}
-        favorites={favorites}
-        toggleFavorite={toggleFavorite}
       />
       <Library
         songs={songs}
@@ -431,9 +407,7 @@ function MusicPlayer() {
         setSongs={setSongs}
         libraryStatus={libraryStatus}
         setLibraryStatus={setLibraryStatus}
-        setIsPlaying={setIsPlaying}
         favorites={favorites}
-        toggleFavorite={toggleFavorite}
       />
       <audio
         onTimeUpdate={timeUpdateHandler}

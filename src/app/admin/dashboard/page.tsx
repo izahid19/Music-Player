@@ -16,8 +16,6 @@ import {
   faHome,
   faGear,
   faCompactDisc,
-  faSun,
-  faMoon,
   faSearch,
   faChevronLeft,
   faChevronRight,
@@ -83,22 +81,7 @@ export default function AdminDashboardPage() {
   const audioInputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Theme state
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('musicPlayerTheme') || 'light';
-    }
-    return 'light';
-  });
 
-  useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('musicPlayerTheme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
 
   const fetchSongs = useCallback(async (page: number = 1, search: string = '') => {
     setLoading(true);
@@ -282,7 +265,7 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className={`admin-dashboard-new ${theme === 'dark' ? 'dark-theme' : ''}`}>
+    <div className="admin-dashboard-new">
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
@@ -317,10 +300,7 @@ export default function AdminDashboardPage() {
             <FontAwesomeIcon icon={faGear} />
             <span>Settings</span>
           </a>
-          <button className="theme-toggle" onClick={toggleTheme}>
-            <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} />
-            <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
-          </button>
+
         </div>
       </aside>
 

@@ -1,10 +1,16 @@
 .player {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
     min-height: 20vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+    // justify-content: space-between; // Removed as requested
     gap: 1rem;
+    padding-bottom: 1rem; // Add bottom spacing as requested
   }
   
   .time-control {
@@ -23,11 +29,19 @@
     }
   }
 
+  .controls-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    position: relative;
+  }
+
   .play-control {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
+    padding: 1rem 1.5rem; // Updated: 1.5rem left/right
     width: 40%;
     gap: 1rem;
   
@@ -77,67 +91,76 @@
   }
 
   .volume-control {
+    position: absolute;
+    left: 70%; // Position right next to the centered play-control (which ends at 70%)
+    width: auto;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    width: 30%;
+    gap: 1rem;
     padding: 0.5rem;
 
     .volume-icon {
       cursor: pointer;
       color: var(--text-secondary);
-      transition: color 0.2s ease;
+      transition: all 0.2s ease;
+      font-size: 1.1rem;
 
       &:hover {
         color: var(--text-color);
+        transform: scale(1.1);
       }
     }
 
     .volume-slider {
-      flex: 1;
+      width: 100px; // Fixed width for clean look
       -webkit-appearance: none;
       appearance: none;
       height: 4px;
-      background: var(--input-bg);
-      border-radius: 5px;
+      // background: removed to allow inline gradient
+      border-radius: 2px;
       outline: none;
       cursor: pointer;
+      // accent-color removed as we use gradient
+      transition: height 0.2s ease;
 
       &::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        width: 14px;
-        height: 14px;
-        background: var(--text-color);
+        width: 12px;
+        height: 12px;
+        background: var(--text-color); // White thumb
         border-radius: 50%;
         cursor: pointer;
-        transition: background 0.2s ease;
-
-        &:hover {
-          background: var(--text-secondary);
-        }
+        opacity: 0; // Hide thumb by default like Spotify
+        transition: all 0.2s ease;
+        box-shadow: 0 0 5px rgba(0,0,0,0.5);
       }
-
+      
       &::-moz-range-thumb {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         background: var(--text-color);
+        border: none;
         border-radius: 50%;
         cursor: pointer;
-        border: none;
-        transition: background 0.2s ease;
+        opacity: 0;
+        transition: all 0.2s ease;
+        box-shadow: 0 0 5px rgba(0,0,0,0.5);
+      }
 
-        &:hover {
-          background: var(--text-secondary);
+      &:hover {
+        height: 6px; // Enlarge track slightly on hover
+        
+        &::-webkit-slider-thumb {
+          opacity: 1; // Show thumb
+          transform: scale(1.1);
+        }
+        
+        &::-moz-range-thumb {
+          opacity: 1;
+          transform: scale(1.1);
         }
       }
-    }
-
-    .volume-percentage {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      min-width: 40px;
-      text-align: right;
     }
   }
   
@@ -177,17 +200,22 @@
     border: none;
   }
   
-  @media screen and (max-width: 768px) {
+  @media screen and (max-width: 1024px) {
     .time-control {
       width: 90%;
+      
+      p {
+        padding: 0.5rem; // Reduce padding
+      }
     }
   
     .play-control {
-      width: 80%;
-      gap: 0.5rem;
+      width: 100%; 
+      padding: 1rem 1.5rem; // Updated to match user request
+      gap: 1.5rem; 
     }
 
     .volume-control {
-      width: 80%;
+      display: none; // Hide volume slider on mobile to reduce clutter
     }
   }

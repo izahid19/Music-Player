@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlay,
@@ -8,14 +8,14 @@ import {
   faShuffle,
   faRepeat,
   faVolumeHigh,
-  faVolumeXmark,
+  faVolumeXmark
 } from "@fortawesome/free-solid-svg-icons";
 
 const Player = ({
+  audioRef,
   currentSong,
   isPlaying,
   setIsPlaying,
-  audioRef,
   setSongInfo,
   songInfo,
   songs,
@@ -28,39 +28,42 @@ const Player = ({
   isShuffled,
   setIsShuffled,
   repeatMode,
-  setRepeatMode,
-  skipTrack,
-  favorites,
-  toggleFavorite,
+  setRepeatMode
 }) => {
-  const playSongHandler = () => {
-    isPlaying ? audioRef.current.pause() : audioRef.current.play();
-    setIsPlaying(!isPlaying);
-  };
-
   const activeLibraryHandler = (nextPrev) => {
-    const newSongs = songs.map((songClicked) => {
-      if (songClicked.id === nextPrev.id) {
-        return { ...songClicked, active: true };
+    const newSongs = songs.map((song) => {
+      if (song.id === nextPrev.id) {
+        return { ...song, active: true };
       } else {
-        return { ...songClicked, active: false };
+        return { ...song, active: false };
       }
     });
     setSongs(newSongs);
-    if (isPlaying) audioRef.current.play();
+  };
+
+  const playSongHandler = () => {
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(!isPlaying);
+    } else {
+      audioRef.current.play();
+      setIsPlaying(!isPlaying);
+    }
   };
 
   const getTime = (time) => {
-    return Math.floor(time / 60) + ":" + ("0" + Math.floor(time % 60)).slice(-2);
+    return (
+      Math.floor(time / 60) + ":" + ("0" + Math.floor(time % 60)).slice(-2)
+    );
   };
 
-  const draghandler = (e) => {
+  const dragHandler = (e) => {
     audioRef.current.currentTime = e.target.value;
     setSongInfo({ ...songInfo, currentTime: e.target.value });
   };
 
   const skipTrackHandler = async (direction) => {
-    let currentIndex = songs.findIndex((song) => song.active);
+    let currentIndex = songs.findIndex((song) => song.id === currentSong.id);
     if (direction === "skip-forward") {
       await setCurrentSong(songs[(currentIndex + 1) % songs.length]);
       activeLibraryHandler(songs[(currentIndex + 1) % songs.length]);
@@ -77,32 +80,15 @@ const Player = ({
     }
     if (isPlaying) audioRef.current.play();
   };
-
-  const volumeChangeHandler = (e) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    if (newVolume > 0 && isMuted) {
-      setIsMuted(false);
-    }
-  };
-
-  const toggleMuteHandler = () => {
-    setIsMuted(!isMuted);
-  };
-
-  const toggleShuffleHandler = () => {
-    setIsShuffled(!isShuffled);
-  };
-
-  const cycleRepeatHandler = () => {
-    const modes = ['off', 'all', 'one'];
-    const currentIndex = modes.indexOf(repeatMode);
-    const nextMode = modes[(currentIndex + 1) % modes.length];
-    setRepeatMode(nextMode);
-  };
-
+  
   const trackAnim = {
-    transform: `translateX(${songInfo.animationPercentage}%)`,
+    transform: `translateX(${songInfo.animationPercentage}%)`
+  };
+
+  const cycleRepeat = () => {
+      const modes = ['off', 'one', 'all'];
+      const nextIndex = (modes.indexOf(repeatMode) + 1) % modes.length;
+      if (setRepeatMode) setRepeatMode(modes[nextIndex]);
   };
 
   return (
@@ -119,86 +105,71 @@ const Player = ({
             min={0}
             max={songInfo.duration || 0}
             value={songInfo.currentTime}
+            onChange={dragHandler}
             type="range"
-            onChange={draghandler}
           />
-          <div style={trackAnim} className="animate-track" />
+          <div style={trackAnim} className="animate-track"></div>
         </div>
         <p>{songInfo.duration ? getTime(songInfo.duration) : "0:00"}</p>
       </div>
-      
-      <div className="play-control">
-        <motion.span whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
+      <div className="controls-wrapper">
+        <div className="play-control">
           <FontAwesomeIcon
-            onClick={toggleShuffleHandler}
+            onClick={() => setIsShuffled && setIsShuffled(!isShuffled)}
             className={`shuffle ${isShuffled ? 'active' : ''}`}
+            size="1x"
             icon={faShuffle}
-            size="lg"
-            title="Shuffle"
           />
-        </motion.span>
-        
-        <motion.span whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
           <FontAwesomeIcon
-            onClick={() => skipTrackHandler("skip-back")}
+            onClick={() => skipTrackHandler('skip-back')}
             className="skip-back"
-            icon={faAngleLeft}
             size="2x"
+            icon={faAngleLeft}
           />
-        </motion.span>
-        
-        <motion.span whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
           <FontAwesomeIcon
             onClick={playSongHandler}
             className="play"
+            size="2x"
             icon={isPlaying ? faPause : faPlay}
-            size="2x"
           />
-        </motion.span>
-        
-        <motion.span whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
           <FontAwesomeIcon
-            onClick={() => skipTrackHandler("skip-forward")}
+            onClick={() => skipTrackHandler('skip-forward')}
             className="skip-forward"
-            icon={faAngleRight}
             size="2x"
+            icon={faAngleRight}
           />
-        </motion.span>
-        
-        <motion.span whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} className="repeat-btn">
-          <FontAwesomeIcon
-            onClick={cycleRepeatHandler}
-            className={`repeat ${repeatMode !== 'off' ? 'active' : ''}`}
-            icon={faRepeat}
-            size="lg"
-            title={repeatMode === 'one' ? 'Repeat One' : repeatMode === 'all' ? 'Repeat All' : 'Repeat Off'}
-          />
-          {repeatMode === 'one' && <span className="repeat-one-badge">1</span>}
-        </motion.span>
-      </div>
-      
-      <div className="volume-control">
-        <motion.span whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
-          <FontAwesomeIcon
-            onClick={toggleMuteHandler}
-            className="volume-icon"
-            icon={isMuted || volume === 0 ? faVolumeXmark : faVolumeHigh}
-            size="lg"
-            title={isMuted ? "Unmute" : "Mute"}
-          />
-        </motion.span>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={isMuted ? 0 : volume}
-          onChange={volumeChangeHandler}
-          className="volume-slider"
-        />
-        <span className="volume-percentage">
-          {Math.round((isMuted ? 0 : volume) * 100)}%
-        </span>
+          <div className="repeat-btn">
+             <FontAwesomeIcon
+                onClick={cycleRepeat}
+                className={`repeat ${repeatMode !== 'off' ? 'active' : ''}`}
+                size="1x"
+                icon={faRepeat}
+              />
+              {repeatMode === 'one' && (
+                <span className="repeat-one-badge">1</span>
+              )}
+          </div>
+        </div>
+        <div className="volume-control">
+           <FontAwesomeIcon 
+             onClick={() => setIsMuted && setIsMuted(!isMuted)}
+             className="volume-icon"
+             size="1x"
+             icon={isMuted || volume === 0 ? faVolumeXmark : faVolumeHigh}
+           />
+           <input
+             onChange={(e) => setVolume && setVolume(parseFloat(e.target.value))}
+             type="range"
+             min={0}
+             max={1}
+             step={0.01}
+             value={isMuted ? 0 : volume}
+             className="volume-slider"
+             style={{
+                background: `linear-gradient(to right, var(--accent-color) ${isMuted ? 0 : volume * 100}%, rgba(255,255,255,0.1) ${isMuted ? 0 : volume * 100}%)`
+             }}
+           />
+        </div>
       </div>
     </div>
   );

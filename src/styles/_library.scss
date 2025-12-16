@@ -118,9 +118,15 @@
     opacity: 1;
   }
   
-  @media screen and (max-width: 768px) {
+  @media screen and (max-width: 1024px) {
     .library {
-      width: 40%;
+      width: 100%;
+      z-index: 20; // Ensure it's on top
+      
+      .library-header svg {
+        margin-left: 1.5rem;
+        margin-right: 2rem; // Keep it from touching the edge
+      }
     }
   }
   

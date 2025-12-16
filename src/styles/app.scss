@@ -8,18 +8,6 @@
 @use "./loading";
 
   :root {
-    --bg-color: #ffffff;
-    --text-color: #363636;
-    --text-secondary: #646464;
-    --accent-color: #22c55e;
-    --player-bg: #ffffff;
-    --shadow-color: rgba(175, 175, 175, 0.2);
-    --input-bg: rgb(204, 204, 204);
-    --hover-bg: rgb(222, 222, 255);
-    --active-song-bg: rgba(141, 202, 238, 0.5);
-  }
-
-  [data-theme='dark'] {
     --bg-color: #1a1a1a;
     --text-color: #f3f4f6;
     --text-secondary: #9ca3af;
@@ -30,6 +18,7 @@
     --hover-bg: #374151;
     --active-song-bg: #3b82f680;
   }
+
 
   * {
     margin: 0;
@@ -57,11 +46,27 @@
   }
   
   .App {
+    min-height: 100vh;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; // Prevent scrolling
     transition: all 0.5s ease;
+    position: relative;
   }
   
   .library-active {
-    margin-right: 20rem;
+    padding-right: 24rem; // Using padding to shrink content area instead of margin
+    // Move nav/song/player to left? No, they stay centered in available space
+  }
+  
+  @media screen and (max-width: 768px) {
+    .library-active {
+        padding-right: 0; // On mobile, library usually overlays or takes full screen
+        // If library is 100% width on mobile, we don't need padding-right
+        // But need to handle library z-index
+    }
   }
   
   .ocean {
@@ -73,6 +78,10 @@
     background: #015871;
     pointer-events: none;
     z-index: -50;
+    
+    @media screen and (max-width: 768px) {
+      display: none;
+    }
   }
   
   .wave {
@@ -86,6 +95,12 @@
     animation: wave 7s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
     transform: translate3d(0, 0, 0);
     pointer-events: none;
+    
+    @media screen and (max-width: 768px) {
+      top: -100px;
+      height: 100px;
+      // Adjust width/animation for mobile if needed, but keeping large width is fine for loop
+    }
   }
   
   .wave:nth-of-type(2) {
@@ -93,6 +108,10 @@
     animation: wave 7s cubic-bezier(0.36, 0.45, 0.63, 0.53) -0.125s infinite,
       swell 7s ease -1.25s infinite;
     opacity: 1;
+
+    @media screen and (max-width: 768px) {
+      top: -90px;
+    }
   }
   
   @keyframes wave {

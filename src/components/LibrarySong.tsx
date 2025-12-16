@@ -1,59 +1,54 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeart } from "@fortawesome/free-solid-svg-icons";
+import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHeart } from '@fortawesome/free-solid-svg-icons';
 
 const LibrarySong = ({
-  song,
+  name,
+  artist,
+  cover,
+  id,
   setCurrentSong,
   songs,
   audioRef,
   isPlaying,
-  setIsPlaying,
-  favorites,
-  toggleFavorite,
+  setSongs,
+  active,
+  isFavorite
 }) => {
   const songSelectHandler = async () => {
-    await setCurrentSong(song);
-    setIsPlaying(true);
-  };
-  
-  const favoriteHandler = (e) => {
-    e.stopPropagation();
-    toggleFavorite(song.id);
-  };
+    const selectedSong = songs.filter((state) => state.id === id);
+    await setCurrentSong(selectedSong[0]);
+    // Active state logic
+    const newSongs = songs.map((song) => {
+      if (song.id === id) {
+        return {
+          ...song,
+          active: true,
+        };
+      } else {
+        return {
+          ...song,
+          active: false,
+        };
+      }
+    });
+    setSongs(newSongs); // Update state
 
-  const isFavorite = favorites.includes(song.id);
+    // Audio play
+    if (isPlaying) audioRef.current.play();
+  };
 
   return (
-    <motion.div
-      onClick={songSelectHandler}
-      className={`library-song ${song.active ? "selected" : ""}`}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      <img src={song.cover} alt={song.name} />
+    <div onClick={songSelectHandler} className={`library-song ${active ? 'selected' : ''}`}>
+      <img src={cover} alt={name}></img>
       <div className="song-description">
-        <h3>{song.name}</h3>
-        <h4>{song.artist}</h4>
+        <h3>{name}</h3>
+        <h4>{artist}</h4>
       </div>
-      <motion.span
-        whileHover={{ scale: 1.2 }}
-        whileTap={{ scale: 0.8 }}
-        style={{ display: 'inline-flex', marginLeft: 'auto' }}
-      >
-        <FontAwesomeIcon
-          onClick={favoriteHandler}
-          icon={faHeart}
-          className={`favorite ${isFavorite ? "active" : ""}`}
-          style={{ 
-            color: isFavorite ? "#ef4444" : "var(--text-secondary)",
-            cursor: "pointer",
-            fontSize: "1rem"
-          }}
-        />
-      </motion.span>
-    </motion.div>
+       {isFavorite && (
+          <FontAwesomeIcon icon={faHeart} style={{marginLeft: 'auto', color: '#ef4444'}} />
+      )}
+    </div>
   );
 };
 

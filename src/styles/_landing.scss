@@ -10,15 +10,8 @@
 
   // Nav styling specific to landing page
   nav {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+    position: relative;
     z-index: 999;
-    background: rgba(255, 255, 255, 0.02);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     padding: 1rem 2rem;
 
     h1 {
@@ -88,7 +81,7 @@
 
 // Hero Section
 .hero {
-  min-height: 100vh;
+  min-height: 90vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -97,7 +90,6 @@
   z-index: 1;
   text-align: center;
   padding: 2rem;
-  padding-top: 5rem; // Account for navbar
 }
 
 .hero-content {
@@ -401,17 +393,19 @@ footer {
   font-weight: 500;
   position: relative;
   z-index: 50;
-  
-  // Default / Light Mode
-  background: rgba(255, 255, 255, 0.8);
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-
-  // Dark Mode override
-  [data-theme='dark'] & {
-    background: rgba(20, 20, 25, 0.85);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-  }
-
+  background: rgba(20, 20, 25, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
   margin-top: auto;
+
+  a {
+    color: var(--accent-color);
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: var(--text-color);
+    }
+  }
 }
