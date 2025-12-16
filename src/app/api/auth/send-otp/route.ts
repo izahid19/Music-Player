@@ -30,10 +30,10 @@ async function sendEmailWithBrevo(to: string, otp: string): Promise<boolean> {
           name: 'Admin',
         },
       ],
-      subject: `Your Playly Admin Login OTP: ${otp}`,
+      subject: `Your Playyly Admin Login OTP: ${otp}`,
       htmlContent: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #667eea; text-align: center;">Playly Admin</h1>
+          <h1 style="color: #667eea; text-align: center;">Playyly Admin</h1>
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center;">
             <h2 style="color: white; margin: 0;">Your One-Time Password</h2>
             <p style="font-size: 48px; font-weight: bold; color: white; letter-spacing: 8px; margin: 20px 0;">${otp}</p>

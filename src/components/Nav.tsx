@@ -20,7 +20,7 @@ const Nav = ({ libraryStatus, setLibraryStatus, theme, toggleTheme, hideLibrary 
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        Playly
+        Playyly
       </motion.h1>
       <div className="nav-buttons">
         <motion.div 

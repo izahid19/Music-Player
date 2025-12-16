@@ -89,7 +89,7 @@ export default function AdminLoginPage() {
 
       <div className="login-card">
         <div className="logo">
-          <h1>Playly</h1>
+          <h1>Playyly</h1>
           <p>Admin Dashboard</p>
         </div>
 

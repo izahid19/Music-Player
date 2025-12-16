@@ -1,4 +1,4 @@
-# 🎵 Playly - Music Player
+# 🎵 Playyly - Music Player
 
 A modern, full-stack music player application built with Next.js, featuring an admin dashboard for music management and a beautiful player interface.
 

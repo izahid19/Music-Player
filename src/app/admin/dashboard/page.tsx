@@ -290,7 +290,7 @@ export default function AdminDashboardPage() {
             <div className="logo-icon">
               <FontAwesomeIcon icon={faMusic} />
             </div>
-            <span>Playly</span>
+            <span>Playyly</span>
           </div>
         </div>
 

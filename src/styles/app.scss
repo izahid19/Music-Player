@@ -5,6 +5,7 @@
 @use "./landing";
 @use "./admin";
 @use "./not-found";
+@use "./loading";
 
   :root {
     --bg-color: #ffffff;
@@ -44,7 +45,6 @@
   
   body {
     font-family: "Lato", sans-serif;
-    overflow: hidden;
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: background-color 0.3s ease, color 0.3s ease;
