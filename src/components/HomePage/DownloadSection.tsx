@@ -27,8 +27,13 @@ const itemVariants = {
 
 export default function DownloadSection() {
   const handleDownload = () => {
-    // This will be the APK download link
-    window.open('/app/playyly.apk', '_blank');
+    // Direct download of the APK file
+    const link = document.createElement('a');
+    link.href = '/android-app.apk';
+    link.download = 'playyly-music.apk';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
