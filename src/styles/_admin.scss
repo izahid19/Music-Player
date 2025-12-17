@@ -983,6 +983,27 @@
     }
   }
 
+  .play-count-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--dash-hover);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--dash-text);
+  }
+
+  .mobile-play-count {
+    font-size: 0.75rem;
+    color: var(--dash-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    
+    svg { color: var(--dash-accent); }
+  }
+
   .action-btns {
     display: flex;
     gap: 8px;

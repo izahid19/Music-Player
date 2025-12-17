@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Nav from '../components/Nav';
-import { HeroSection, FeaturesSection, Footer, Background } from '../components/HomePage';
+import { HeroSection, FeaturesSection, DownloadSection, Footer, Background } from '../components/HomePage';
 
 const LandingPage = () => {
   return (
@@ -22,6 +22,9 @@ const LandingPage = () => {
 
       {/* Features Section */}
       <FeaturesSection />
+
+      {/* Download App Section */}
+      <DownloadSection />
 
       {/* Footer */}
       <Footer />

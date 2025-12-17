@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     // If fetchAll is true, return all songs without pagination
     if (fetchAll) {
-      const songs = await Song.find(searchQuery).sort({ createdAt: -1 });
+      const songs = await Song.find(searchQuery).sort({ playCount: -1, createdAt: -1 });
       
       const formattedSongs = songs.map((song, index) => ({
         id: song._id.toString(),
@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
         color: song.color,
         active: index === 0,
         addedBy: song.addedBy,
+        playCount: song.playCount || 0,
       }));
 
       return NextResponse.json(formattedSongs);
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     // Get paginated songs
     const songs = await Song.find(searchQuery)
-      .sort({ createdAt: -1 })
+      .sort({ playCount: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
 
@@ -62,6 +63,7 @@ export async function GET(request: NextRequest) {
       color: song.color,
       active: page === 1 && index === 0,
       addedBy: song.addedBy,
+      playCount: song.playCount || 0,
     }));
 
     return NextResponse.json({
@@ -91,7 +93,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, artist, cover, audio, color } = body;
+    const { name, artist, cover, audio, color, playCount } = body;
 
     if (!name || !artist || !cover || !audio || !color) {
       return NextResponse.json(
@@ -108,6 +110,7 @@ export async function POST(request: NextRequest) {
       cover,
       audio,
       color,
+      playCount: playCount || 0,
       active: false,
       addedBy: auth.email, // Track which admin added this song
     });
@@ -123,6 +126,7 @@ export async function POST(request: NextRequest) {
         color: song.color,
         active: song.active,
         addedBy: song.addedBy,
+        playCount: song.playCount,
       },
     });
   } catch (error) {

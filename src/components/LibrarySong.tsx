@@ -13,7 +13,8 @@ const LibrarySong = ({
   isPlaying,
   setSongs,
   active,
-  isFavorite
+  isFavorite,
+  isPopular
 }) => {
   const songSelectHandler = async () => {
     const selectedSong = songs.filter((state) => state.id === id);
@@ -42,7 +43,14 @@ const LibrarySong = ({
     <div onClick={songSelectHandler} className={`library-song ${active ? 'selected' : ''}`}>
       <img src={cover} alt={name}></img>
       <div className="song-description">
-        <h3>{name}</h3>
+        <h3>
+            {name} 
+            {isPopular && (
+                <span className="popular-tag">
+                    🔥 Popular
+                </span>
+            )}
+        </h3>
         <h4>{artist}</h4>
       </div>
        {isFavorite && (

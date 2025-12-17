@@ -22,8 +22,10 @@ import {
   faUser,
   faUsers,
   faCrown,
+  faMobileAlt,
 } from '@fortawesome/free-solid-svg-icons';
 import { defaultCoverImages } from '@/util';
+import AppVersionManager from '@/components/Admin/AppVersionManager';
 
 interface Song {
   id: string;
@@ -33,7 +35,9 @@ interface Song {
   audio: string;
   color: [string, string];
   active: boolean;
+
   addedBy?: string;
+  playCount?: number;
 }
 
 interface Pagination {
@@ -49,6 +53,7 @@ interface SongFormData {
   cover: string;
   audio: string;
   color: [string, string];
+  playCount: number;
 }
 
 const initialFormData: SongFormData = {
@@ -57,10 +62,12 @@ const initialFormData: SongFormData = {
   cover: '',
   audio: '',
   color: ['#667eea', '#764ba2'],
+  playCount: 0,
 };
 
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const [activeView, setActiveView] = useState<'songs' | 'mobile'>('songs');
   const [songs, setSongs] = useState<Song[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -269,6 +276,7 @@ export default function AdminDashboardPage() {
       cover: song.cover,
       audio: song.audio,
       color: song.color,
+      playCount: song.playCount || 0,
     });
     // Check if cover is a default image
     const isDefault = defaultCoverImages.some((img) => img.url === song.cover);
@@ -319,10 +327,52 @@ export default function AdminDashboardPage() {
       {/* Main Content */}
       <div className="main-content">
         {/* Header */}
-        <header className="dashboard-header">
+        <div className="dashboard-header">
           <div className="header-title">
-            <h1>Admin Dashboard</h1>
-            <p>Manage your music library</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '5px' }}>
+                <h1 style={{ margin: 0 }}>{activeView === 'songs' ? 'Music Library' : 'Mobile App Settings'}</h1>
+                <div className="view-switcher" style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px' }}>
+                    <button 
+                        onClick={() => setActiveView('songs')}
+                        style={{
+                            background: activeView === 'songs' ? 'var(--accent-color)' : 'transparent',
+                            color: activeView === 'songs' ? 'white' : 'var(--text-secondary)',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.85rem',
+                            fontWeight: '600',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}
+                    >
+                        <FontAwesomeIcon icon={faMusic} size="sm"/> Music
+                    </button>
+                    <button 
+                         onClick={() => setActiveView('mobile')}
+                         style={{
+                            background: activeView === 'mobile' ? 'var(--accent-color)' : 'transparent',
+                            color: activeView === 'mobile' ? 'white' : 'var(--text-secondary)',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.85rem',
+                            fontWeight: '600',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}
+                    >
+                        <FontAwesomeIcon icon={faMobileAlt} size="sm"/> App
+                    </button>
+                </div>
+            </div>
+            <p>{activeView === 'songs' ? 'Manage your music collection' : 'Manage app versions and downloads'}</p>
           </div>
           <div className="header-actions">
             <div className="user-profile">
@@ -345,229 +395,244 @@ export default function AdminDashboardPage() {
               <span>Logout</span>
             </button>
           </div>
-        </header>
+        </div>
 
         {/* Page Content */}
         <main className="page-content">
-          {/* Stats Cards */}
-          <div className="stats-row">
-            <div className="stat-card">
-              <div className="stat-icon">
-                <FontAwesomeIcon icon={faMusic} />
-              </div>
-              <div className="stat-info">
-                <span className="stat-value">{pagination.total}</span>
-                <span className="stat-label">Total Songs</span>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon accent">
-                <FontAwesomeIcon icon={faCompactDisc} />
-              </div>
-              <div className="stat-info">
-                <span className="stat-value">{pagination.total > 0 ? 'Active' : 'Empty'}</span>
-                <span className="stat-label">Library Status</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Action */}
-          <div className="quick-action">
-            <button className="add-song-btn" onClick={() => setShowModal(true)}>
-              <FontAwesomeIcon icon={faPlus} />
-              <span>Add New Song</span>
-            </button>
-          </div>
-
-          {/* Songs Table */}
-          <div className="table-section">
-            <div className="table-header">
-              <h3>Music Library</h3>
-              <div className="table-controls">
-                <div className="search-box">
-                  <FontAwesomeIcon icon={faSearch} />
-                  <input
-                    type="text"
-                    placeholder="Search songs or artists..."
-                    value={searchInput}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                  />
-                </div>
-                <span className="song-count">{pagination.total} songs</span>
-              </div>
-            </div>
-
-            {loading ? (
-              <>
-                {/* Desktop Skeleton */}
-                <div className="table-container desktop-only">
-                  <table className="songs-table">
-                    <thead>
-                      <tr>
-                        <th>Song Name</th>
-                        <th>Artist</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <tr key={i} className="skeleton-row">
-                          <td>
-                            <div className="skeleton-cell">
-                              <div className="skeleton skeleton-thumb"></div>
-                              <div className="skeleton skeleton-text"></div>
-                            </div>
-                          </td>
-                          <td><div className="skeleton skeleton-text-short"></div></td>
-                          <td><div className="skeleton skeleton-badge"></div></td>
-                          <td>
-                            <div className="skeleton-actions">
-                              <div className="skeleton skeleton-btn"></div>
-                              <div className="skeleton skeleton-btn"></div>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile Skeleton */}
-                <div className="cards-container mobile-only">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div className="song-card skeleton-card" key={i}>
-                      <div className="card-top">
-                        <div className="skeleton skeleton-cover"></div>
-                        <div className="card-info">
-                          <div className="skeleton skeleton-title"></div>
-                          <div className="skeleton skeleton-subtitle"></div>
-                          <div className="skeleton skeleton-badge"></div>
-                        </div>
-                      </div>
-                      <div className="card-actions">
-                        <div className="skeleton skeleton-action-btn"></div>
-                        <div className="skeleton skeleton-action-btn"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : songs.length === 0 ? (
-              <div className="empty-state">
-                <FontAwesomeIcon icon={faMusic} size="2x" />
-                <h4>{searchQuery ? 'No songs found' : 'No songs yet'}</h4>
-                <p>{searchQuery ? 'Try a different search term' : 'Click "Add New Song" to get started'}</p>
-              </div>
-            ) : (
-              <>
-                {/* Desktop Table View */}
-                <div className="table-container desktop-only">
-                  <table className="songs-table">
-                    <thead>
-                      <tr>
-                        <th>Song Name</th>
-                        <th>Artist</th>
-                        <th>Added By</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {songs.map((song) => (
-                        <tr key={song.id}>
-                          <td>
-                            <div className="song-cell">
-                              <img src={song.cover} alt={song.name} className="song-thumb" />
-                              <span>{song.name}</span>
-                            </div>
-                          </td>
-                          <td>{song.artist}</td>
-                          <td>
-                            <span className={`added-by-badge ${song.addedBy === adminEmail ? 'own' : ''}`}>
-                              {song.addedBy === adminEmail ? 'You' : (song.addedBy || 'Unknown')}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="action-btns">
-                              {canModifySong(song) ? (
-                                <>
-                                  <button className="action-btn edit" onClick={() => handleEdit(song)}>
-                                    <FontAwesomeIcon icon={faEdit} /> Edit
-                                  </button>
-                                  <button className="action-btn delete" onClick={() => handleDelete(song.id)}>
-                                    <FontAwesomeIcon icon={faTrash} /> Delete
-                                  </button>
-                                </>
-                              ) : (
-                                <span className="no-permission">View only</span>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile Card View */}
-                <div className="cards-container mobile-only">
-                  {songs.map((song) => (
-                    <div className="song-card" key={song.id}>
-                      <div className="card-top">
-                        <img src={song.cover} alt={song.name} className="card-cover" />
-                        <div className="card-info">
-                          <h4 className="card-title">{song.name}</h4>
-                          <p className="card-artist">{song.artist}</p>
-                          <span className={`added-by-badge ${song.addedBy === adminEmail ? 'own' : ''}`}>
-                            {song.addedBy === adminEmail ? 'Added by you' : `By: ${song.addedBy || 'Unknown'}`}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="card-actions">
-                        {canModifySong(song) ? (
-                          <>
-                            <button className="action-btn edit" onClick={() => handleEdit(song)}>
-                              <FontAwesomeIcon icon={faEdit} /> Edit
-                            </button>
-                            <button className="action-btn delete" onClick={() => handleDelete(song.id)}>
-                              <FontAwesomeIcon icon={faTrash} /> Delete
-                            </button>
-                          </>
-                        ) : (
-                          <span className="no-permission">View only</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {pagination.totalPages > 1 && (
-                  <div className="pagination">
-                    <button
-                      className="pagination-btn"
-                      onClick={() => handlePageChange(pagination.page - 1)}
-                      disabled={pagination.page <= 1}
-                    >
-                      <FontAwesomeIcon icon={faChevronLeft} />
-                    </button>
-                    
-                    <div className="pagination-info">
-                      <span>Page {pagination.page} of {pagination.totalPages}</span>
-                    </div>
-
-                    <button
-                      className="pagination-btn"
-                      onClick={() => handlePageChange(pagination.page + 1)}
-                      disabled={pagination.page >= pagination.totalPages}
-                    >
-                      <FontAwesomeIcon icon={faChevronRight} />
-                    </button>
+          {activeView === 'songs' ? (
+            <>
+              {/* Stats Row */}
+              <div className="stats-row">
+                <div className="stat-card">
+                  <div className="stat-icon">
+                    <FontAwesomeIcon icon={faMusic} />
                   </div>
+                  <div className="stat-info">
+                    <span className="stat-value">{pagination.total}</span>
+                    <span className="stat-label">Total Songs</span>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon accent">
+                    <FontAwesomeIcon icon={faCompactDisc} />
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-value">{pagination.total > 0 ? 'Active' : 'Empty'}</span>
+                    <span className="stat-label">Library Status</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Action */}
+              <div className="quick-action">
+                <button className="add-song-btn" onClick={() => setShowModal(true)}>
+                  <FontAwesomeIcon icon={faPlus} />
+                  <span>Add New Song</span>
+                </button>
+              </div>
+
+              {/* Songs Table */}
+              <div className="table-section">
+                <div className="table-header">
+                  <h3>Music Library</h3>
+                  <div className="table-controls">
+                    <div className="search-box">
+                      <FontAwesomeIcon icon={faSearch} />
+                      <input
+                        type="text"
+                        placeholder="Search songs or artists..."
+                        value={searchInput}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                      />
+                    </div>
+                    <span className="song-count">{pagination.total} songs</span>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <>
+                    {/* Desktop Skeleton */}
+                    <div className="table-container desktop-only">
+                      <table className="songs-table">
+                        <thead>
+                          <tr>
+                            <th>Song Name</th>
+                            <th>Artist</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[1, 2, 3, 4, 5].map((i) => (
+                            <tr key={i} className="skeleton-row">
+                              <td>
+                                <div className="skeleton-cell">
+                                  <div className="skeleton skeleton-thumb"></div>
+                                  <div className="skeleton skeleton-text"></div>
+                                </div>
+                              </td>
+                              <td><div className="skeleton skeleton-text-short"></div></td>
+                              <td><div className="skeleton skeleton-badge"></div></td>
+                              <td>
+                                <div className="skeleton-actions">
+                                  <div className="skeleton skeleton-btn"></div>
+                                  <div className="skeleton skeleton-btn"></div>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Skeleton */}
+                    <div className="cards-container mobile-only">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div className="song-card skeleton-card" key={i}>
+                          <div className="card-top">
+                            <div className="skeleton skeleton-cover"></div>
+                            <div className="card-info">
+                              <div className="skeleton skeleton-title"></div>
+                              <div className="skeleton skeleton-subtitle"></div>
+                              <div className="skeleton skeleton-badge"></div>
+                            </div>
+                          </div>
+                          <div className="card-actions">
+                            <div className="skeleton skeleton-action-btn"></div>
+                            <div className="skeleton skeleton-action-btn"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : songs.length === 0 ? (
+                  <div className="empty-state">
+                    <FontAwesomeIcon icon={faMusic} size="2x" />
+                    <h4>{searchQuery ? 'No songs found' : 'No songs yet'}</h4>
+                    <p>{searchQuery ? 'Try a different search term' : 'Click "Add New Song" to get started'}</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="table-container desktop-only">
+                      <table className="songs-table">
+                        <thead>
+                          <tr>
+                            <th>Song Name</th>
+                            <th>Artist</th>
+                            <th>Plays</th>
+                            <th>Added By</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {songs.map((song) => (
+                            <tr key={song.id}>
+                              <td>
+                                <div className="song-cell">
+                                  <img src={song.cover} alt={song.name} className="song-thumb" />
+                                  <span>{song.name}</span>
+                                </div>
+                              </td>
+                              <td>{song.artist}</td>
+                              <td>
+                                  <span className="play-count-badge">
+                                      {song.playCount || 0}
+                                  </span>
+                              </td>
+                              <td>
+                                <span className={`added-by-badge ${song.addedBy === adminEmail ? 'own' : ''}`}>
+                                  {song.addedBy === adminEmail ? 'You' : (song.addedBy || 'Unknown')}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="action-btns">
+                                  {canModifySong(song) ? (
+                                    <>
+                                      <button className="action-btn edit" onClick={() => handleEdit(song)}>
+                                        <FontAwesomeIcon icon={faEdit} /> Edit
+                                      </button>
+                                      <button className="action-btn delete" onClick={() => handleDelete(song.id)}>
+                                        <FontAwesomeIcon icon={faTrash} /> Delete
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <span className="no-permission">View only</span>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="cards-container mobile-only">
+                      {songs.map((song) => (
+                        <div className="song-card" key={song.id}>
+                          <div className="card-top">
+                            <img src={song.cover} alt={song.name} className="card-cover" />
+                            <div className="card-info">
+                              <h4 className="card-title">{song.name}</h4>
+                              <p className="card-artist">{song.artist}</p>
+                              <span className={`added-by-badge ${song.addedBy === adminEmail ? 'own' : ''}`}>
+                                {song.addedBy === adminEmail ? 'Added by you' : `By: ${song.addedBy || 'Unknown'}`}
+                              </span>
+                              <span className="mobile-play-count">
+                                  <FontAwesomeIcon icon={faMusic} size="xs" /> {song.playCount || 0} plays
+                              </span>
+                            </div>
+                          </div>
+                          <div className="card-actions">
+                            {canModifySong(song) ? (
+                              <>
+                                <button className="action-btn edit" onClick={() => handleEdit(song)}>
+                                  <FontAwesomeIcon icon={faEdit} /> Edit
+                                </button>
+                                <button className="action-btn delete" onClick={() => handleDelete(song.id)}>
+                                  <FontAwesomeIcon icon={faTrash} /> Delete
+                                </button>
+                              </>
+                            ) : (
+                              <span className="no-permission">View only</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {pagination.totalPages > 1 && (
+                      <div className="pagination">
+                        <button
+                          className="pagination-btn"
+                          onClick={() => handlePageChange(pagination.page - 1)}
+                          disabled={pagination.page <= 1}
+                        >
+                          <FontAwesomeIcon icon={faChevronLeft} />
+                        </button>
+                        
+                        <div className="pagination-info">
+                          <span>Page {pagination.page} of {pagination.totalPages}</span>
+                        </div>
+
+                        <button
+                          className="pagination-btn"
+                          onClick={() => handlePageChange(pagination.page + 1)}
+                          disabled={pagination.page >= pagination.totalPages}
+                        >
+                          <FontAwesomeIcon icon={faChevronRight} />
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          ) : (
+            <AppVersionManager />
+          )}
         </main>
       </div>
 
@@ -602,6 +667,16 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setFormData({ ...formData, artist: e.target.value })}
                     placeholder="Enter artist name"
                     required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Play Count (Read Only)</label>
+                  <input
+                    type="number"
+                    value={formData.playCount}
+                    disabled
+                    style={{ opacity: 0.7, cursor: 'not-allowed' }}
                   />
                 </div>
 

@@ -121,6 +121,22 @@
     h4 {
       font-size: 0.7rem;
     }
+    
+    .popular-tag {
+        font-size: 0.65rem;
+        margin-left: 8px;
+        padding: 3px 10px;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        color: #000;
+        font-weight: 800;
+        border-radius: 20px;
+        vertical-align: middle;
+        border: none;
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 5px rgba(255, 165, 0, 0.3);
+    }
   }
   
   /* The emerging W3C standard

@@ -44,3 +44,6 @@ coverage
 # Misc
 .vercel
 *.tsbuildinfo
+
+# Mobile App (separate project)
+playyly-app/

@@ -16,7 +16,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, artist, cover, audio, color } = body;
+    const { name, artist, cover, audio, color, playCount } = body;
 
     await dbConnect();
 
@@ -43,7 +43,7 @@ export async function PUT(
 
     const song = await Song.findByIdAndUpdate(
       id,
-      { name, artist, cover, audio, color },
+      { name, artist, cover, audio, color, playCount },
       { new: true, runValidators: true }
     );
 
@@ -58,6 +58,7 @@ export async function PUT(
         color: song.color,
         active: song.active,
         addedBy: song.addedBy,
+        playCount: song.playCount,
       },
     });
   } catch (error) {

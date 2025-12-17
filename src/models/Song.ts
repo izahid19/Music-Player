@@ -7,6 +7,7 @@ export interface ISong extends Document {
   audio: string;
   color: [string, string];
   active: boolean;
+  playCount: number;
   addedBy: string; // Email of admin who added this song
   createdAt: Date;
   updatedAt: Date;
@@ -43,6 +44,10 @@ const SongSchema = new Schema<ISong>(
     active: {
       type: Boolean,
       default: false,
+    },
+    playCount: {
+      type: Number,
+      default: 0,
     },
     addedBy: {
       type: String,

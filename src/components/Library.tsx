@@ -88,6 +88,7 @@ const Library: React.FC<LibraryProps> = ({
             isPlaying={isPlaying}
             setSongs={setSongs}
             isFavorite={favorites.includes(song.id)}
+            isPopular={songs.findIndex((s: any) => s.id === song.id) < 3}
           />
         ))}
       </div>

@@ -262,6 +262,14 @@ function MusicPlayer() {
   // Sync active state when currentSong changes
   useEffect(() => {
     if (!currentSong) return;
+
+    // Increment play count
+    fetch('/api/songs/play', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ songId: currentSong.id }),
+    }).catch(console.error);
+
     setSongs((prevSongs: Song[]) => {
       return prevSongs.map((song) => ({
         ...song,
