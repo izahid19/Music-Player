@@ -12,6 +12,7 @@ const LibrarySong = ({
   audioRef,
   isPlaying,
   setSongs,
+  setIsPlaying,
   active,
   isFavorite,
   isPopular
@@ -35,8 +36,14 @@ const LibrarySong = ({
     });
     setSongs(newSongs); // Update state
 
-    // Audio play
-    if (isPlaying) audioRef.current.play();
+    // Always play the song when selected from library
+    // Use setTimeout to ensure the audio source is updated first
+    setTimeout(() => {
+      if (audioRef.current) {
+        audioRef.current.play().catch(e => console.log('Playback error:', e));
+        if (setIsPlaying) setIsPlaying(true);
+      }
+    }, 100);
   };
 
   return (

@@ -413,6 +413,7 @@ function MusicPlayer() {
         setCurrentSong={setCurrentSong}
         audioRef={audioRef}
         isPlaying={isPlaying}
+        setIsPlaying={setIsPlaying}
         setSongs={setSongs}
         libraryStatus={libraryStatus}
         setLibraryStatus={setLibraryStatus}

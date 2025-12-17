@@ -8,6 +8,7 @@ interface LibraryProps {
   setCurrentSong: (song: any) => void;
   audioRef: React.RefObject<HTMLAudioElement>;
   isPlaying: boolean;
+  setIsPlaying: (isPlaying: boolean) => void;
   setSongs: (songs: any[]) => void;
   libraryStatus: boolean;
   setLibraryStatus: (status: boolean) => void;
@@ -19,6 +20,7 @@ const Library: React.FC<LibraryProps> = ({
   setCurrentSong,
   audioRef,
   isPlaying,
+  setIsPlaying,
   setSongs,
   libraryStatus,
   setLibraryStatus,
@@ -86,6 +88,7 @@ const Library: React.FC<LibraryProps> = ({
             setCurrentSong={setCurrentSong}
             audioRef={audioRef}
             isPlaying={isPlaying}
+            setIsPlaying={setIsPlaying}
             setSongs={setSongs}
             isFavorite={favorites.includes(song.id)}
             isPopular={songs.findIndex((s: any) => s.id === song.id) < 3}
