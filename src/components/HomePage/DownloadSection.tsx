@@ -29,8 +29,8 @@ export default function DownloadSection() {
   const handleDownload = () => {
     // Direct download of the APK file
     const link = document.createElement('a');
-    link.href = '/android-app.apk';
-    link.download = 'playyly-music.apk';
+    link.href = '/playylymusic.apk';
+    link.download = 'playylymusic.apk';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
