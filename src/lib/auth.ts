@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
-export function verifyAdminToken(request: NextRequest): { valid: boolean; email?: string } {
+export function verifyAdminToken(request: NextRequest): { valid: boolean; email?: string; role?: string } {
   const token = request.cookies.get('admin_token')?.value;
 
   if (!token) {
@@ -12,8 +12,8 @@ export function verifyAdminToken(request: NextRequest): { valid: boolean; email?
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { email: string; role: string };
-    if (decoded.role === 'admin') {
-      return { valid: true, email: decoded.email };
+    if (decoded.role === 'admin' || decoded.role === 'super_admin') {
+      return { valid: true, email: decoded.email, role: decoded.role };
     }
     return { valid: false };
   } catch {

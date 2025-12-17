@@ -1,21 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import redis from '@/lib/redis';
 import jwt from 'jsonwebtoken';
+import dbConnect from '@/lib/mongodb';
+import AdminUser from '@/models/AdminUser';
+import { RateLimiter } from '@/lib/rate-limit';
 
 const JWT_SECRET = process.env.JWT_SECRET!;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL!;
+const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL!;
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 5 verification attempts per 15 minutes per IP
+  const rateLimit = await RateLimiter.check(request, 'verify_otp', {
+    limit: 5,
+    window: 15 * 60
+  });
+
+  if (!rateLimit.success) {
+    return RateLimiter.response(rateLimit);
+  }
+
   try {
     const { email, otp } = await request.json();
-    const emailLower = email.toLowerCase();
+    const emailLower = email.toLowerCase().trim();
 
-    // Only allow admin email
-    if (emailLower !== ADMIN_EMAIL.toLowerCase()) {
-      return NextResponse.json(
-        { error: 'Unauthorized email address' },
-        { status: 403 }
-      );
+    // Connect to database
+    await dbConnect();
+
+    // Check if email is super admin (from env)
+    const isSuperAdmin = emailLower === SUPER_ADMIN_EMAIL.toLowerCase();
+    
+    // Check if email is in allowed admins list
+    let adminUser = null;
+    if (!isSuperAdmin) {
+      adminUser = await AdminUser.findOne({ email: emailLower });
+      if (!adminUser) {
+        return NextResponse.json(
+          { error: 'You are not authorized to access the admin dashboard. Please contact the super admin.' },
+          { status: 403 }
+        );
+      }
     }
 
     // Get OTP from Redis
@@ -44,11 +67,14 @@ export async function POST(request: NextRequest) {
     await redis.del(otpKey);
     await redis.del(`otp_rate_limit:${emailLower}`);
 
-    // Create JWT token
+    // Determine role
+    const role = isSuperAdmin ? 'super_admin' : (adminUser?.role || 'admin');
+
+    // Create JWT token with role
     const token = jwt.sign(
       {
         email: emailLower,
-        role: 'admin',
+        role: role,
       },
       JWT_SECRET,
       { expiresIn: '24h' }
@@ -58,6 +84,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       message: 'Login successful',
+      role: role,
     });
 
     response.cookies.set('admin_token', token, {

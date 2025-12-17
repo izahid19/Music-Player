@@ -13,8 +13,6 @@ import {
   faTimes,
   faSpinner,
   faCheck,
-  faHome,
-  faGear,
   faCompactDisc,
   faSearch,
   faChevronLeft,
@@ -22,6 +20,8 @@ import {
   faLink,
   faImage,
   faUser,
+  faUsers,
+  faCrown,
 } from '@fortawesome/free-solid-svg-icons';
 import { defaultCoverImages } from '@/util';
 
@@ -33,6 +33,7 @@ interface Song {
   audio: string;
   color: [string, string];
   active: boolean;
+  addedBy?: string;
 }
 
 interface Pagination {
@@ -82,11 +83,12 @@ export default function AdminDashboardPage() {
   const audioInputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [adminEmail, setAdminEmail] = useState<string>('');
+  const [adminRole, setAdminRole] = useState<string>('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingSongId, setDeletingSongId] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-
+  const isSuperAdmin = adminRole === 'super_admin';
 
   const fetchSongs = useCallback(async (page: number = 1, search: string = '') => {
     setLoading(true);
@@ -113,27 +115,37 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
-    // Check authentication
-    const checkAuth = () => {
-      const cookies = document.cookie.split(';');
-      const hasToken = cookies.some(cookie => cookie.trim().startsWith('admin_token='));
-      if (!hasToken) {
+    // Check authentication via API (httpOnly cookie is not readable by JS)
+    const checkAuthAndLoad = async () => {
+      try {
+        const authRes = await fetch('/api/auth/me');
+        const authData = await authRes.json();
+        
+        if (!authRes.ok || !authData.email) {
+          // Not authenticated, redirect to login
+          router.replace('/admin/login');
+          return;
+        }
+        
+        // Set admin email and role
+        setAdminEmail(authData.email);
+        setAdminRole(authData.role || 'admin');
+        
+        // Load songs
+        fetchSongs(1, '');
+      } catch (error) {
+        // Error checking auth, redirect to login
         router.replace('/admin/login');
-        return false;
       }
-      return true;
     };
     
-    if (!checkAuth()) return;
+    checkAuthAndLoad();
+  }, [router, fetchSongs]);
 
-    fetchSongs(pagination.page, searchQuery);
-    
-    // Fetch admin email
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(data => setAdminEmail(data.email || ''))
-      .catch(() => {});
-  }, [router]);
+  // Check if current user can edit/delete a song
+  const canModifySong = (song: Song) => {
+    return isSuperAdmin || song.addedBy === adminEmail;
+  };
 
   // Debounced search
   const handleSearchChange = (value: string) => {
@@ -315,10 +327,19 @@ export default function AdminDashboardPage() {
           <div className="header-actions">
             <div className="user-profile">
               <div className="user-avatar">
-                <FontAwesomeIcon icon={faUser} />
+                <FontAwesomeIcon icon={isSuperAdmin ? faCrown : faUser} />
               </div>
-              <span className="user-email">{adminEmail}</span>
+              <div className="user-info">
+                <span className="user-email">{adminEmail}</span>
+                {isSuperAdmin && <span className="role-badge super">Super Admin</span>}
+              </div>
             </div>
+            {isSuperAdmin && (
+              <button className="manage-admins-btn" onClick={() => router.push('/admin/manage-admins')}>
+                <FontAwesomeIcon icon={faUsers} />
+                <span>Manage Admins</span>
+              </button>
+            )}
             <button className="logout-btn" onClick={handleLogout}>
               <FontAwesomeIcon icon={faSignOutAlt} />
               <span>Logout</span>
@@ -447,7 +468,7 @@ export default function AdminDashboardPage() {
                       <tr>
                         <th>Song Name</th>
                         <th>Artist</th>
-                        <th>Status</th>
+                        <th>Added By</th>
                         <th>Action</th>
                       </tr>
                     </thead>
@@ -462,16 +483,24 @@ export default function AdminDashboardPage() {
                           </td>
                           <td>{song.artist}</td>
                           <td>
-                            <span className="status-badge active">Active</span>
+                            <span className={`added-by-badge ${song.addedBy === adminEmail ? 'own' : ''}`}>
+                              {song.addedBy === adminEmail ? 'You' : (song.addedBy || 'Unknown')}
+                            </span>
                           </td>
                           <td>
                             <div className="action-btns">
-                              <button className="action-btn edit" onClick={() => handleEdit(song)}>
-                                <FontAwesomeIcon icon={faEdit} /> Edit
-                              </button>
-                              <button className="action-btn delete" onClick={() => handleDelete(song.id)}>
-                                <FontAwesomeIcon icon={faTrash} /> Delete
-                              </button>
+                              {canModifySong(song) ? (
+                                <>
+                                  <button className="action-btn edit" onClick={() => handleEdit(song)}>
+                                    <FontAwesomeIcon icon={faEdit} /> Edit
+                                  </button>
+                                  <button className="action-btn delete" onClick={() => handleDelete(song.id)}>
+                                    <FontAwesomeIcon icon={faTrash} /> Delete
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="no-permission">View only</span>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -489,16 +518,24 @@ export default function AdminDashboardPage() {
                         <div className="card-info">
                           <h4 className="card-title">{song.name}</h4>
                           <p className="card-artist">{song.artist}</p>
-                          <span className="status-badge active">Active</span>
+                          <span className={`added-by-badge ${song.addedBy === adminEmail ? 'own' : ''}`}>
+                            {song.addedBy === adminEmail ? 'Added by you' : `By: ${song.addedBy || 'Unknown'}`}
+                          </span>
                         </div>
                       </div>
                       <div className="card-actions">
-                        <button className="action-btn edit" onClick={() => handleEdit(song)}>
-                          <FontAwesomeIcon icon={faEdit} /> Edit
-                        </button>
-                        <button className="action-btn delete" onClick={() => handleDelete(song.id)}>
-                          <FontAwesomeIcon icon={faTrash} /> Delete
-                        </button>
+                        {canModifySong(song) ? (
+                          <>
+                            <button className="action-btn edit" onClick={() => handleEdit(song)}>
+                              <FontAwesomeIcon icon={faEdit} /> Edit
+                            </button>
+                            <button className="action-btn delete" onClick={() => handleDelete(song.id)}>
+                              <FontAwesomeIcon icon={faTrash} /> Delete
+                            </button>
+                          </>
+                        ) : (
+                          <span className="no-permission">View only</span>
+                        )}
                       </div>
                     </div>
                   ))}

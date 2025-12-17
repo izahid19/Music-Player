@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import redis from '@/lib/redis';
+import dbConnect from '@/lib/mongodb';
+import AdminUser from '@/models/AdminUser';
+import { RateLimiter } from '@/lib/rate-limit';
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY!;
 const FROM_EMAIL = process.env.FROM_EMAIL!;
 const FROM_NAME = process.env.FROM_NAME!;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL!;
+const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL!; // Super admin from env
 
 const OTP_EXPIRY_SECONDS = 10 * 60; // 10 minutes
 const RATE_LIMIT_SECONDS = 2 * 60; // 2 minutes
+
+// ... (helper functions remain the same) ...
 
 function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -53,16 +58,36 @@ async function sendEmailWithBrevo(to: string, otp: string): Promise<boolean> {
 }
 
 export async function POST(request: NextRequest) {
+  // IP-based rate limit: 5 OTP requests per hour per IP
+  const ipLimit = await RateLimiter.check(request, 'otp_request_ip', {
+    limit: 5,
+    window: 60 * 60 // 1 hour
+  });
+
+  if (!ipLimit.success) {
+    return RateLimiter.response(ipLimit);
+  }
+
   try {
     const { email } = await request.json();
-    const emailLower = email.toLowerCase();
+    const emailLower = email.toLowerCase().trim();
 
-    // Only allow admin email
-    if (emailLower !== ADMIN_EMAIL.toLowerCase()) {
-      return NextResponse.json(
-        { error: 'Unauthorized email address' },
-        { status: 403 }
-      );
+    // Connect to database
+    await dbConnect();
+
+    // Check if email is super admin (from env)
+    const isSuperAdmin = emailLower === SUPER_ADMIN_EMAIL.toLowerCase();
+    
+    // Check if email is in allowed admins list
+    let adminUser = null;
+    if (!isSuperAdmin) {
+      adminUser = await AdminUser.findOne({ email: emailLower });
+      if (!adminUser) {
+        return NextResponse.json(
+          { error: 'You are not authorized to access the admin dashboard. Please contact the super admin.' },
+          { status: 403 }
+        );
+      }
     }
 
     // Check rate limit - can only request OTP every 2 minutes

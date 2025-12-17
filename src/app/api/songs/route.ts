@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
         audio: song.audio,
         color: song.color,
         active: index === 0,
+        addedBy: song.addedBy,
       }));
 
       return NextResponse.json(formattedSongs);
@@ -60,6 +61,7 @@ export async function GET(request: NextRequest) {
       audio: song.audio,
       color: song.color,
       active: page === 1 && index === 0,
+      addedBy: song.addedBy,
     }));
 
     return NextResponse.json({
@@ -107,6 +109,7 @@ export async function POST(request: NextRequest) {
       audio,
       color,
       active: false,
+      addedBy: auth.email, // Track which admin added this song
     });
 
     return NextResponse.json({
@@ -119,6 +122,7 @@ export async function POST(request: NextRequest) {
         audio: song.audio,
         color: song.color,
         active: song.active,
+        addedBy: song.addedBy,
       },
     });
   } catch (error) {

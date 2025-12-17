@@ -1,9 +1,19 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyAdminToken } from '@/lib/auth';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@playly.com';
-
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = verifyAdminToken(request);
+  
+  if (!auth.valid) {
+    return NextResponse.json(
+      { error: 'Not authenticated' },
+      { status: 401 }
+    );
+  }
+  
   return NextResponse.json({ 
-    email: ADMIN_EMAIL 
+    email: auth.email,
+    role: auth.role,
+    authenticated: true
   });
 }
