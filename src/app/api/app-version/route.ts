@@ -50,11 +50,19 @@ export async function GET() {
   }
 }
 
-// POST update app version (admin only)
+// POST update app version (super admin only)
 export async function POST(request: NextRequest) {
     const auth = verifyAdminToken(request);
     if (!auth.valid) {
       return unauthorizedResponse();
+    }
+
+    // Only super admin can update app version
+    if (auth.role !== 'super_admin') {
+      return NextResponse.json(
+        { error: 'Only super admin can update app configuration' },
+        { status: 403 }
+      );
     }
 
     try {

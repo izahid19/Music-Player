@@ -8,6 +8,7 @@ export interface IAppVersion extends Document {
   iosUrl?: string; // Future proofing
   forceUpdate: boolean;
   isActive: boolean;
+  downloadCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +45,10 @@ const AppVersionSchema = new Schema<IAppVersion>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    downloadCount: {
+      type: Number,
+      default: 0,
     },
   },
   {

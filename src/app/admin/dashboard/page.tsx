@@ -23,7 +23,11 @@ import {
   faUsers,
   faCrown,
   faMobileAlt,
+  faHeadphones,
+  faDownload,
+  faHome,
 } from '@fortawesome/free-solid-svg-icons';
+import Link from 'next/link';
 import { defaultCoverImages } from '@/util';
 import AppVersionManager from '@/components/Admin/AppVersionManager';
 
@@ -45,6 +49,7 @@ interface Pagination {
   limit: number;
   total: number;
   totalPages: number;
+  totalStreams: number;
 }
 
 interface SongFormData {
@@ -74,6 +79,7 @@ export default function AdminDashboardPage() {
     limit: 10,
     total: 0,
     totalPages: 0,
+    totalStreams: 0,
   });
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -94,6 +100,7 @@ export default function AdminDashboardPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingSongId, setDeletingSongId] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [downloadCount, setDownloadCount] = useState(0);
 
   const isSuperAdmin = adminRole === 'super_admin';
 
@@ -113,7 +120,7 @@ export default function AdminDashboardPage() {
       
       const data = await response.json();
       setSongs(data.songs || []);
-      setPagination(data.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 });
+      setPagination(data.pagination || { page: 1, limit: 10, total: 0, totalPages: 0, totalStreams: 0 });
     } catch (err) {
       setError('Failed to load songs');
     } finally {
@@ -140,6 +147,17 @@ export default function AdminDashboardPage() {
         
         // Load songs
         fetchSongs(1, '');
+        
+        // Load download count
+        try {
+          const downloadRes = await fetch('/api/app-version/download');
+          const downloadData = await downloadRes.json();
+          if (downloadRes.ok) {
+            setDownloadCount(downloadData.downloadCount || 0);
+          }
+        } catch (e) {
+          console.error('Failed to fetch download count');
+        }
       } catch (error) {
         // Error checking auth, redirect to login
         router.replace('/admin/login');
@@ -187,51 +205,87 @@ export default function AdminDashboardPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check file size - limit to 10MB
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      setError('File size exceeds 10MB limit. Please choose a smaller file.');
+      return;
+    }
+
     setUploading(true);
     setUploadProgress(0);
     setError('');
 
-    const formDataUpload = new FormData();
-    formDataUpload.append('file', file);
-    formDataUpload.append('type', 'audio');
+    try {
+      // Step 1: Get signed upload credentials from our API
+      const signatureRes = await fetch('/api/upload/signature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'audio',
+          filename: file.name,
+        }),
+      });
 
-    const xhr = new XMLHttpRequest();
-    
-    xhr.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable) {
-        const percentComplete = Math.round((event.loaded / event.total) * 100);
-        setUploadProgress(percentComplete);
+      if (!signatureRes.ok) {
+        const errData = await signatureRes.json();
+        throw new Error(errData.error || 'Failed to get upload signature');
       }
-    });
 
-    xhr.addEventListener('load', () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          setFormData((prev) => ({ ...prev, audio: data.url }));
-        } catch {
-          setError('Invalid response from server');
+      const { signature, timestamp, cloudName, apiKey, folder, publicId, resourceType } = await signatureRes.json();
+
+      // Step 2: Upload directly to Cloudinary (bypasses Vercel's 4.5MB limit)
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      formDataUpload.append('api_key', apiKey);
+      formDataUpload.append('timestamp', timestamp.toString());
+      formDataUpload.append('signature', signature);
+      formDataUpload.append('folder', folder);
+      formDataUpload.append('public_id', publicId);
+
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percentComplete);
         }
-      } else {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          setError(data.error || 'Upload failed');
-        } catch {
-          setError('Upload failed');
+      });
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            setFormData((prev) => ({ ...prev, audio: data.secure_url }));
+          } catch {
+            setError('Invalid response from Cloudinary');
+          }
+        } else {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            setError(data.error?.message || 'Upload failed');
+          } catch {
+            setError('Upload failed');
+          }
         }
-      }
+        setUploading(false);
+        setUploadProgress(0);
+      });
+
+      xhr.addEventListener('error', () => {
+        setError('Upload failed - network error');
+        setUploading(false);
+        setUploadProgress(0);
+      });
+
+      // Upload directly to Cloudinary's API
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`);
+      xhr.send(formDataUpload);
+    } catch (err: any) {
+      setError(err.message || 'Upload failed');
       setUploading(false);
       setUploadProgress(0);
-    });
-
-    xhr.addEventListener('error', () => {
-      setError('Upload failed - network error');
-      setUploading(false);
-      setUploadProgress(0);
-    });
-
-    xhr.open('POST', '/api/upload');
-    xhr.send(formDataUpload);
+    }
   };
 
   const handleSelectCover = (url: string) => {
@@ -269,6 +323,12 @@ export default function AdminDashboardPage() {
   };
 
   const handleEdit = (song: Song) => {
+    // Permission check - only super admin or song owner can edit
+    if (!canModifySong(song)) {
+      setError('You do not have permission to edit this song.');
+      return;
+    }
+    
     setEditingId(song.id);
     setFormData({
       name: song.name,
@@ -285,6 +345,12 @@ export default function AdminDashboardPage() {
   };
 
   const handleDelete = (id: string) => {
+    // Only super admin can delete songs
+    if (!isSuperAdmin) {
+      setError('Only super admin can delete songs.');
+      return;
+    }
+    
     setDeletingSongId(id);
     setShowDeleteConfirm(true);
   };
@@ -330,6 +396,30 @@ export default function AdminDashboardPage() {
         <div className="dashboard-header">
           <div className="header-title">
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '5px' }}>
+                <Link href="/" style={{ textDecoration: 'none' }}>
+                  <button 
+                    className="home-btn"
+                    style={{
+                      background: 'rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '10px',
+                      padding: '10px 16px',
+                      color: 'var(--dash-text)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '0.9rem',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                  >
+                    <FontAwesomeIcon icon={faHome} />
+                    <span>Home</span>
+                  </button>
+                </Link>
                 <h1 style={{ margin: 0 }}>{activeView === 'songs' ? 'Music Library' : 'Mobile App Settings'}</h1>
                 <div className="view-switcher" style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px' }}>
                     <button 
@@ -414,11 +504,20 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="stat-card">
                   <div className="stat-icon accent">
-                    <FontAwesomeIcon icon={faCompactDisc} />
+                    <FontAwesomeIcon icon={faHeadphones} />
                   </div>
                   <div className="stat-info">
-                    <span className="stat-value">{pagination.total > 0 ? 'Active' : 'Empty'}</span>
-                    <span className="stat-label">Library Status</span>
+                    <span className="stat-value">{pagination.totalStreams.toLocaleString()}</span>
+                    <span className="stat-label">Total Streams</span>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}>
+                    <FontAwesomeIcon icon={faDownload} style={{ color: 'white' }} />
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-value">{downloadCount.toLocaleString()}</span>
+                    <span className="stat-label">APK Downloads</span>
                   </div>
                 </div>
               </div>
@@ -547,16 +646,22 @@ export default function AdminDashboardPage() {
                               </td>
                               <td>
                                 <div className="action-btns">
-                                  {canModifySong(song) ? (
-                                    <>
-                                      <button className="action-btn edit" onClick={() => handleEdit(song)}>
-                                        <FontAwesomeIcon icon={faEdit} /> Edit
-                                      </button>
-                                      <button className="action-btn delete" onClick={() => handleDelete(song.id)}>
-                                        <FontAwesomeIcon icon={faTrash} /> Delete
-                                      </button>
-                                    </>
-                                  ) : (
+                                  {canModifySong(song) && (
+                                    <button className="action-btn edit" onClick={() => handleEdit(song)}>
+                                      <FontAwesomeIcon icon={faEdit} /> Edit
+                                    </button>
+                                  )}
+                                  {(isSuperAdmin || song.addedBy === adminEmail) && (
+                                    <button 
+                                      className={`action-btn delete ${!isSuperAdmin ? 'disabled' : ''}`}
+                                      onClick={() => isSuperAdmin && handleDelete(song.id)}
+                                      disabled={!isSuperAdmin}
+                                      title={!isSuperAdmin ? 'Only super admin can delete' : 'Delete song'}
+                                    >
+                                      <FontAwesomeIcon icon={faTrash} /> Delete
+                                    </button>
+                                  )}
+                                  {!canModifySong(song) && !isSuperAdmin && (
                                     <span className="no-permission">View only</span>
                                   )}
                                 </div>
@@ -585,16 +690,22 @@ export default function AdminDashboardPage() {
                             </div>
                           </div>
                           <div className="card-actions">
-                            {canModifySong(song) ? (
-                              <>
-                                <button className="action-btn edit" onClick={() => handleEdit(song)}>
-                                  <FontAwesomeIcon icon={faEdit} /> Edit
-                                </button>
-                                <button className="action-btn delete" onClick={() => handleDelete(song.id)}>
-                                  <FontAwesomeIcon icon={faTrash} /> Delete
-                                </button>
-                              </>
-                            ) : (
+                            {canModifySong(song) && (
+                              <button className="action-btn edit" onClick={() => handleEdit(song)}>
+                                <FontAwesomeIcon icon={faEdit} /> Edit
+                              </button>
+                            )}
+                            {(isSuperAdmin || song.addedBy === adminEmail) && (
+                              <button 
+                                className={`action-btn delete ${!isSuperAdmin ? 'disabled' : ''}`}
+                                onClick={() => isSuperAdmin && handleDelete(song.id)}
+                                disabled={!isSuperAdmin}
+                                title={!isSuperAdmin ? 'Only super admin can delete' : 'Delete song'}
+                              >
+                                <FontAwesomeIcon icon={faTrash} /> Delete
+                              </button>
+                            )}
+                            {!canModifySong(song) && !isSuperAdmin && (
                               <span className="no-permission">View only</span>
                             )}
                           </div>
@@ -631,7 +742,7 @@ export default function AdminDashboardPage() {
               </div>
             </>
           ) : (
-            <AppVersionManager />
+            <AppVersionManager isSuperAdmin={isSuperAdmin} />
           )}
         </main>
       </div>

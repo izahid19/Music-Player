@@ -66,6 +66,13 @@ export async function GET(request: NextRequest) {
       playCount: song.playCount || 0,
     }));
 
+    // Get total streams count
+    const streamsResult = await Song.aggregate([
+      { $match: searchQuery },
+      { $group: { _id: null, totalStreams: { $sum: '$playCount' } } }
+    ]);
+    const totalStreams = streamsResult.length > 0 ? streamsResult[0].totalStreams : 0;
+
     return NextResponse.json({
       songs: formattedSongs,
       pagination: {
@@ -73,6 +80,7 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
+        totalStreams,
       },
     });
   } catch (error) {

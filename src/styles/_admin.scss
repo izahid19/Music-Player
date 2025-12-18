@@ -430,7 +430,7 @@
       padding: 16px 20px;
       flex-direction: column;
       gap: 16px;
-      align-items: flex-start;
+      align-items: stretch;
     }
   }
 
@@ -440,12 +440,49 @@
       font-weight: 600;
       color: var(--dash-text);
       margin: 0 0 4px 0;
+      
+      @media (max-width: 768px) {
+        font-size: 1.1rem;
+      }
+      
+      @media (max-width: 480px) {
+        font-size: 1rem;
+      }
     }
 
     p {
       font-size: 0.85rem;
       color: var(--dash-text-secondary);
       margin: 0;
+      
+      @media (max-width: 480px) {
+        font-size: 0.75rem;
+      }
+    }
+    
+    // The row with home button, title, and view switcher
+    & > div:first-child {
+      @media (max-width: 768px) {
+        flex-wrap: wrap;
+        gap: 12px !important;
+      }
+      
+      @media (max-width: 480px) {
+        gap: 8px !important;
+      }
+    }
+    
+    // View switcher tabs
+    .view-switcher {
+      @media (max-width: 480px) {
+        padding: 3px !important;
+        
+        button {
+          padding: 5px 10px !important;
+          font-size: 0.75rem !important;
+          gap: 4px !important;
+        }
+      }
     }
   }
 
@@ -453,6 +490,26 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    
+    @media (max-width: 768px) {
+      width: 100%;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    
+    @media (max-width: 480px) {
+      gap: 8px;
+    }
+  }
+  
+  .home-btn {
+    @media (max-width: 480px) {
+      padding: 10px !important;
+      
+      span {
+        display: none;
+      }
+    }
   }
 
   .user-profile {
@@ -521,6 +578,24 @@
       background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+    }
+    
+    @media (max-width: 480px) {
+      padding: 10px;
+      
+      span {
+        display: none;
+      }
+    }
+  }
+  
+  .manage-admins-btn {
+    @media (max-width: 480px) {
+      padding: 10px !important;
+      
+      span {
+        display: none;
+      }
     }
   }
 
@@ -1056,10 +1131,24 @@
       color: white;
       border-color: transparent;
 
-      &:hover {
+      &:hover:not(:disabled) {
         background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+      }
+
+      &:disabled,
+      &.disabled {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        cursor: not-allowed;
+        opacity: 0.6;
+        transform: none;
+        box-shadow: none;
+
+        &:hover {
+          transform: none;
+          box-shadow: none;
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAndroid, faApple } from '@fortawesome/free-brands-svg-icons';
-import { faSave, faSpinner, faCheckCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faSpinner, faCheckCircle, faExclamationCircle, faLock } from '@fortawesome/free-solid-svg-icons';
 
 interface AppVersionData {
   version: string;
@@ -11,7 +11,11 @@ interface AppVersionData {
   forceUpdate: boolean;
 }
 
-export default function AppVersionManager() {
+interface AppVersionManagerProps {
+  isSuperAdmin?: boolean;
+}
+
+export default function AppVersionManager({ isSuperAdmin = false }: AppVersionManagerProps) {
   const [data, setData] = useState<AppVersionData>({
     version: '',
     minVersion: '',
@@ -49,6 +53,12 @@ export default function AppVersionManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isSuperAdmin) {
+      setMessage({ type: 'error', text: 'Only super admin can update configuration.' });
+      return;
+    }
+    
     setSaving(true);
     setMessage(null);
 
@@ -80,6 +90,23 @@ export default function AppVersionManager() {
         <h3>Manage Mobile App Version</h3>
       </div>
 
+      {!isSuperAdmin && (
+        <div style={{ 
+          background: 'rgba(251, 146, 60, 0.1)', 
+          border: '1px solid rgba(251, 146, 60, 0.3)',
+          borderRadius: '10px',
+          padding: '16px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          color: '#fb923c'
+        }}>
+          <FontAwesomeIcon icon={faLock} />
+          <span>Only super admin can modify these settings. You have read-only access.</span>
+        </div>
+      )}
+
       {message && (
         <div className={message.type === 'success' ? 'success' : 'error'}>
           <FontAwesomeIcon icon={message.type === 'success' ? faCheckCircle : faExclamationCircle} style={{marginRight: '8px'}} />
@@ -96,6 +123,8 @@ export default function AppVersionManager() {
             onChange={(e) => setData({ ...data, version: e.target.value })}
             placeholder="e.g. 1.0.0"
             required
+            disabled={!isSuperAdmin}
+            style={!isSuperAdmin ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
           />
         </div>
 
@@ -107,6 +136,8 @@ export default function AppVersionManager() {
             onChange={(e) => setData({ ...data, minVersion: e.target.value })}
             placeholder="e.g. 1.0.0"
             required
+            disabled={!isSuperAdmin}
+            style={!isSuperAdmin ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
           />
           <small style={{ color: 'var(--dash-text-secondary)', marginTop: '4px', display: 'block' }}>
             Users on versions below this will be forced to update.
@@ -123,6 +154,8 @@ export default function AppVersionManager() {
               onChange={(e) => setData({ ...data, androidUrl: e.target.value })}
               placeholder="/android-app.apk"
               required
+              disabled={!isSuperAdmin}
+              style={!isSuperAdmin ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
             />
           </div>
         </div>
@@ -133,6 +166,7 @@ export default function AppVersionManager() {
             value={data.changelog}
             onChange={(e) => setData({ ...data, changelog: e.target.value })}
             placeholder="What's new in this update?"
+            disabled={!isSuperAdmin}
             style={{
               width: '100%',
               padding: '12px',
@@ -143,7 +177,8 @@ export default function AppVersionManager() {
               minHeight: '100px',
               fontSize: '0.9rem',
               outline: 'none',
-              fontFamily: 'inherit'
+              fontFamily: 'inherit',
+              ...(! isSuperAdmin ? { opacity: 0.6, cursor: 'not-allowed' } : {})
             }}
           />
         </div>
@@ -155,14 +190,17 @@ export default function AppVersionManager() {
                 checked={data.forceUpdate}
                 onChange={(e) => setData({...data, forceUpdate: e.target.checked})}
                 style={{ width: 'auto' }}
+                disabled={!isSuperAdmin}
              />
-             <label htmlFor="forceUpdate" style={{ margin: 0 }}>Force Update (Maintenance Mode)</label>
+             <label htmlFor="forceUpdate" style={{ margin: 0, ...(! isSuperAdmin ? { opacity: 0.6 } : {}) }}>Force Update (Maintenance Mode)</label>
         </div>
 
-        <button type="submit" className="submit-btn" disabled={saving}>
-          {saving ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faSave} />}
-          {saving ? 'Saving...' : 'Update Configuration'}
-        </button>
+        {isSuperAdmin && (
+          <button type="submit" className="submit-btn" disabled={saving}>
+            {saving ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faSave} />}
+            {saving ? 'Saving...' : 'Update Configuration'}
+          </button>
+        )}
       </form>
     </div>
   );

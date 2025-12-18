@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAndroid } from '@fortawesome/free-brands-svg-icons';
@@ -26,7 +27,53 @@ const itemVariants = {
 } as any;
 
 export default function DownloadSection() {
-  const handleDownload = () => {
+  const [targetDownloads, setTargetDownloads] = useState(30); // Default fallback (base 30)
+  const [displayDownloads, setDisplayDownloads] = useState(0);
+
+  useEffect(() => {
+    // Fetch download count from API
+    const fetchDownloads = async () => {
+      try {
+        const res = await fetch('/api/app-version/download');
+        const data = await res.json();
+        if (data.downloadCount !== undefined) {
+          setTargetDownloads(30 + data.downloadCount); // 30 + actual downloads
+        }
+      } catch (e) {
+        console.error('Failed to fetch download count');
+      }
+    };
+    fetchDownloads();
+  }, []);
+
+  // Counting animation
+  useEffect(() => {
+    if (displayDownloads < targetDownloads) {
+      const duration = 4000; // 4 seconds for animation
+      const steps = 60;
+      const increment = Math.max(1, targetDownloads / steps);
+      const stepDuration = duration / steps;
+      
+      const timer = setTimeout(() => {
+        setDisplayDownloads(prev => {
+          const next = prev + increment;
+          return next >= targetDownloads ? targetDownloads : Math.ceil(next);
+        });
+      }, stepDuration);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [displayDownloads, targetDownloads]);
+
+  const handleDownload = async () => {
+    // Track the download
+    try {
+      await fetch('/api/app-version/download', { method: 'POST' });
+    } catch (e) {
+      // Don't block download if tracking fails
+      console.error('Failed to track download');
+    }
+    
     // Direct download of the APK file
     const link = document.createElement('a');
     link.href = '/playylymusic.apk';
@@ -89,6 +136,14 @@ export default function DownloadSection() {
             </div>
             <FontAwesomeIcon icon={faDownload} className="download-icon" />
           </motion.button>
+
+          <motion.div className="download-stats" variants={itemVariants}>
+            <div className="stat-badge">
+              <FontAwesomeIcon icon={faDownload} />
+              <span className="stat-number">{displayDownloads.toLocaleString()}+</span>
+              <span className="stat-label">Downloads</span>
+            </div>
+          </motion.div>
 
           <motion.p className="download-note" variants={itemVariants}>
             APK file • Android 8.0+

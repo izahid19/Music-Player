@@ -1,8 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faMusic } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faMusic, faHeadphones } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
 
 // Animation Variants
@@ -39,6 +40,43 @@ const floatVariants = {
 
 export default function HeroSection() {
   const router = useRouter();
+  const [targetStreams, setTargetStreams] = useState(200); // Default fallback if API fails
+  const [displayStreams, setDisplayStreams] = useState(0);
+
+  useEffect(() => {
+    // Fetch total streams from API
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/songs?page=1&limit=1');
+        const data = await res.json();
+        if (data.pagination?.totalStreams !== undefined) {
+          setTargetStreams(data.pagination.totalStreams);
+        }
+      } catch (e) {
+        console.error('Failed to fetch stats');
+      }
+    };
+    fetchStats();
+  }, []);
+
+  // Counting animation
+  useEffect(() => {
+    if (displayStreams < targetStreams) {
+      const duration = 4000; // 4 seconds for animation
+      const steps = 60;
+      const increment = Math.max(1, targetStreams / steps);
+      const stepDuration = duration / steps;
+      
+      const timer = setTimeout(() => {
+        setDisplayStreams(prev => {
+          const next = prev + increment;
+          return next >= targetStreams ? targetStreams : Math.ceil(next);
+        });
+      }, stepDuration);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [displayStreams, targetStreams]);
 
   const handleEnterApp = () => {
     router.push('/music');
@@ -67,6 +105,20 @@ export default function HeroSection() {
         <motion.p variants={itemVariants} className="hero-subtitle">
           Your music, your vibe, your way.
         </motion.p>
+
+        {/* Total Streams Stat */}
+        {displayStreams >= 0 && (
+          <motion.div 
+            className="hero-stats"
+            variants={itemVariants}
+          >
+            <div className="stat-badge">
+              <FontAwesomeIcon icon={faHeadphones} />
+              <span className="stat-number">{displayStreams.toLocaleString()}+</span>
+              <span className="stat-label">Total Streams</span>
+            </div>
+          </motion.div>
+        )}
         
         <motion.button 
           className="cta-button"

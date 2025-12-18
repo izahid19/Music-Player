@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHome } from '@fortawesome/free-solid-svg-icons';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -12,6 +15,7 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   // Theme state management
   const [theme, setTheme] = useState(() => {
@@ -20,6 +24,25 @@ export default function AdminLoginPage() {
     }
     return 'light';
   });
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (res.ok && data.email) {
+          // User is already logged in, redirect to dashboard
+          router.replace('/admin/dashboard');
+          return;
+        }
+      } catch (e) {
+        // Not logged in, continue to show login page
+      }
+      setCheckingAuth(false);
+    };
+    checkAuth();
+  }, [router]);
 
   // Apply theme to body
   useEffect(() => {
@@ -134,8 +157,52 @@ export default function AdminLoginPage() {
     }
   };
 
+  // Show loading while checking auth
+  if (checkingAuth) {
+    return (
+      <div className="admin-login">
+        <div className="login-bg">
+          <div className="gradient-orb orb-1"></div>
+          <div className="gradient-orb orb-2"></div>
+          <div className="gradient-orb orb-3"></div>
+        </div>
+        <div className="login-card" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+          <div className="loading-spinner"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-login">
+      {/* Home Button */}
+      <Link href="/" style={{ 
+        position: 'absolute', 
+        top: '20px', 
+        left: '20px', 
+        textDecoration: 'none',
+        zIndex: 10 
+      }}>
+        <button style={{
+          background: 'rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          borderRadius: '12px',
+          padding: '12px 20px',
+          color: 'white',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '0.9rem',
+          fontWeight: '500',
+          transition: 'all 0.2s ease',
+        }}>
+          <FontAwesomeIcon icon={faHome} />
+          Home
+        </button>
+      </Link>
+
       {/* Animated Background */}
       <div className="login-bg">
         <div className="gradient-orb orb-1"></div>
