@@ -205,10 +205,10 @@ export default function AdminDashboardPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size - limit to 10MB
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    // Check file size - limit to 15MB
+    const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
     if (file.size > MAX_FILE_SIZE) {
-      setError('File size exceeds 10MB limit. Please choose a smaller file.');
+      setError('File size exceeds 15MB limit. Please choose a smaller file.');
       return;
     }
 
