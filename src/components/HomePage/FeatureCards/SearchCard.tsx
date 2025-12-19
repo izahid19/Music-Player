@@ -46,10 +46,10 @@ export default function SearchCard() {
   return (
     <motion.div 
       className="bento-card"
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: 0.3, duration: 0.5 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ delay: 0.15, duration: 0.35 }}
       whileHover="hover"
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
