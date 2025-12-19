@@ -293,6 +293,20 @@ export default function AdminDashboardPage() {
     setShowCoverPicker(false);
   };
 
+  // Generate random gradient colors
+  const generateRandomColors = (): [string, string] => {
+    const colors = [
+      '#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe',
+      '#43e97b', '#38f9d7', '#fa709a', '#fee140', '#a8edea', '#fed6e3',
+      '#ff9a9e', '#fecfef', '#a18cd1', '#fbc2eb', '#fad0c4', '#ffd1ff',
+      '#89f7fe', '#66a6ff', '#c2e59c', '#64b3f4', '#11998e', '#38ef7d',
+      '#fc5c7d', '#6a82fb', '#200122', '#6f0000', '#00c9ff', '#92fe9d',
+      '#8e2de2', '#4a00e0', '#f12711', '#f5af19', '#654ea3', '#eaafc8',
+    ];
+    const shuffled = colors.sort(() => 0.5 - Math.random());
+    return [shuffled[0], shuffled[1]];
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -302,10 +316,16 @@ export default function AdminDashboardPage() {
       const url = editingId ? `/api/songs/${editingId}` : '/api/songs';
       const method = editingId ? 'PUT' : 'POST';
 
+      // Generate random colors for new songs, keep existing colors for edits
+      const submitData = {
+        ...formData,
+        color: editingId ? formData.color : generateRandomColors(),
+      };
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       if (!response.ok) {
@@ -888,43 +908,7 @@ export default function AdminDashboardPage() {
                     )}
                   </div>
                 </div>
-                <div className="form-group">
-                  <label>Theme Colors</label>
-                  <div className="color-inputs">
-                    <div className="color-input">
-                      <input
-                        type="color"
-                        value={formData.color[0]}
-                        onChange={(e) =>
-                          setFormData({ ...formData, color: [e.target.value, formData.color[1]] })
-                        }
-                      />
-                      <input
-                        type="text"
-                        value={formData.color[0]}
-                        onChange={(e) =>
-                          setFormData({ ...formData, color: [e.target.value, formData.color[1]] })
-                        }
-                      />
-                    </div>
-                    <div className="color-input">
-                      <input
-                        type="color"
-                        value={formData.color[1]}
-                        onChange={(e) =>
-                          setFormData({ ...formData, color: [formData.color[0], e.target.value] })
-                        }
-                      />
-                      <input
-                        type="text"
-                        value={formData.color[1]}
-                        onChange={(e) =>
-                          setFormData({ ...formData, color: [formData.color[0], e.target.value] })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
+
                 <button
                   type="submit"
                   className="submit-btn"
