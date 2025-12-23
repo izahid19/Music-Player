@@ -10,6 +10,7 @@ const DEFAULT_CONFIG = {
   androidUrl: '/android-app.apk',
   forceUpdate: false,
   changelog: 'Initial release - Enjoy your music on the go!',
+  uploadLimit: 40, // 40 MB default
 };
 
 // GET app version info (public)
@@ -29,6 +30,7 @@ export async function GET() {
             downloadUrl: { android: DEFAULT_CONFIG.androidUrl },
             forceUpdate: DEFAULT_CONFIG.forceUpdate,
             changelog: DEFAULT_CONFIG.changelog,
+            uploadLimit: DEFAULT_CONFIG.uploadLimit,
         });
     }
 
@@ -42,6 +44,7 @@ export async function GET() {
       },
       forceUpdate: latestVersion.forceUpdate,
       changelog: latestVersion.changelog,
+      uploadLimit: latestVersion.uploadLimit || DEFAULT_CONFIG.uploadLimit,
       updatedAt: latestVersion.updatedAt,
     });
   } catch (error) {
@@ -84,6 +87,9 @@ export async function POST(request: NextRequest) {
             versionDoc.changelog = body.changelog || versionDoc.changelog;
             versionDoc.androidUrl = body.androidUrl || versionDoc.androidUrl;
             versionDoc.forceUpdate = body.forceUpdate ?? versionDoc.forceUpdate;
+            if (body.uploadLimit !== undefined) {
+              versionDoc.uploadLimit = Math.min(40, Math.max(1, body.uploadLimit)); // Cap at 40MB
+            }
             await versionDoc.save();
         } else {
             // Create New
@@ -93,6 +99,7 @@ export async function POST(request: NextRequest) {
                 changelog: body.changelog || DEFAULT_CONFIG.changelog,
                 androidUrl: body.androidUrl || DEFAULT_CONFIG.androidUrl,
                 forceUpdate: body.forceUpdate || false,
+                uploadLimit: Math.min(40, Math.max(1, body.uploadLimit || DEFAULT_CONFIG.uploadLimit)), // Cap at 40MB
                 isActive: true
             });
         }

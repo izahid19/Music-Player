@@ -9,6 +9,7 @@ interface AppVersionData {
   changelog: string;
   androidUrl: string;
   forceUpdate: boolean;
+  uploadLimit: number;
 }
 
 interface AppVersionManagerProps {
@@ -22,6 +23,7 @@ export default function AppVersionManager({ isSuperAdmin = false }: AppVersionMa
     changelog: '',
     androidUrl: '',
     forceUpdate: false,
+    uploadLimit: 20,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -42,6 +44,7 @@ export default function AppVersionManager({ isSuperAdmin = false }: AppVersionMa
           changelog: json.changelog || '',
           androidUrl: json.downloadUrl?.android || '',
           forceUpdate: json.forceUpdate || false,
+          uploadLimit: json.uploadLimit || 20,
         });
       }
     } catch (err) {
@@ -181,6 +184,30 @@ export default function AppVersionManager({ isSuperAdmin = false }: AppVersionMa
               ...(! isSuperAdmin ? { opacity: 0.6, cursor: 'not-allowed' } : {})
             }}
           />
+        </div>
+
+        <div className="form-group">
+          <label>Song Upload Limit (MB)</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input
+              type="number"
+              min="1"
+              max="100"
+              value={data.uploadLimit}
+              onChange={(e) => setData({ ...data, uploadLimit: parseInt(e.target.value) || 20 })}
+              placeholder="20"
+              required
+              disabled={!isSuperAdmin}
+              style={{ 
+                width: '100px',
+                ...(! isSuperAdmin ? { opacity: 0.6, cursor: 'not-allowed' } : {})
+              }}
+            />
+            <span style={{ color: 'var(--dash-text-secondary)' }}>MB</span>
+          </div>
+          <small style={{ color: 'var(--dash-text-secondary)', marginTop: '4px', display: 'block' }}>
+            Maximum file size admins can upload for songs (1-100 MB).
+          </small>
         </div>
         
         <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

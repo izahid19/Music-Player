@@ -26,6 +26,7 @@ import {
   faHeadphones,
   faDownload,
   faHome,
+  faCog,
 } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
 import { defaultCoverImages } from '@/util';
@@ -72,7 +73,7 @@ const initialFormData: SongFormData = {
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeView, setActiveView] = useState<'songs' | 'lofi' | 'mobile'>('songs');
+  const [activeView, setActiveView] = useState<'songs' | 'lofi' | 'mobile' | 'settings'>('songs');
   const [songs, setSongs] = useState<Song[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -88,6 +89,7 @@ export default function AdminDashboardPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [uploadLimit, setUploadLimit] = useState(40); // Default 40MB
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -186,7 +188,7 @@ export default function AdminDashboardPage() {
         // Load songs
         fetchSongs(1, '');
         
-        // Load download count
+        // Load download count and upload limit
         try {
           const downloadRes = await fetch('/api/app-version/download');
           const downloadData = await downloadRes.json();
@@ -195,6 +197,17 @@ export default function AdminDashboardPage() {
           }
         } catch (e) {
           console.error('Failed to fetch download count');
+        }
+
+        // Fetch upload limit
+        try {
+          const versionRes = await fetch('/api/app-version');
+          const versionData = await versionRes.json();
+          if (versionRes.ok && versionData.uploadLimit) {
+            setUploadLimit(versionData.uploadLimit);
+          }
+        } catch (e) {
+          console.error('Failed to fetch upload limit');
         }
       } catch (error) {
         // Error checking auth, redirect to login
@@ -243,10 +256,10 @@ export default function AdminDashboardPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size - limit to 15MB
-    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB in bytes
+    // Check file size using dynamic limit from settings
+    const MAX_FILE_SIZE = uploadLimit * 1024 * 1024; // Convert MB to bytes
     if (file.size > MAX_FILE_SIZE) {
-      setError('File size exceeds 20MB limit. Please choose a smaller file.');
+      setError(`File size exceeds ${uploadLimit}MB limit. Please choose a smaller file.`);
       return;
     }
 
@@ -485,7 +498,7 @@ export default function AdminDashboardPage() {
                     <span>Home</span>
                   </button>
                 </Link>
-                <h1 style={{ margin: 0 }}>{activeView === 'songs' ? 'Music Library' : activeView === 'lofi' ? 'Lofi Music Library' : 'Mobile App Settings'}</h1>
+                <h1 style={{ margin: 0 }}>{activeView === 'songs' ? 'Music Library' : activeView === 'lofi' ? 'Lofi Music Library' : activeView === 'settings' ? 'Settings' : 'Mobile App Settings'}</h1>
                 <div className="view-switcher" style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px' }}>
                     <button 
                         onClick={() => setActiveView('songs')}
@@ -549,9 +562,30 @@ export default function AdminDashboardPage() {
                     >
                         <FontAwesomeIcon icon={faMobileAlt} size="sm"/> App
                     </button>
+                    {isSuperAdmin && (
+                      <button 
+                          onClick={() => setActiveView('settings')}
+                          style={{
+                              background: activeView === 'settings' ? 'var(--accent-color)' : 'transparent',
+                              color: activeView === 'settings' ? 'white' : 'var(--text-secondary)',
+                              border: 'none',
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              fontWeight: '600',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                          }}
+                      >
+                          <FontAwesomeIcon icon={faCog} size="sm"/> Settings
+                      </button>
+                    )}
                 </div>
             </div>
-            <p>{activeView === 'songs' ? 'Manage your music collection' : activeView === 'lofi' ? 'Manage lofi/chill music (Super Admin only)' : 'Manage app versions and downloads'}</p>
+            <p>{activeView === 'songs' ? 'Manage your music collection' : activeView === 'lofi' ? 'Manage lofi/chill music (Super Admin only)' : activeView === 'settings' ? 'Configure upload limits and app settings' : 'Manage app versions and downloads'}</p>
           </div>
           <div className="header-actions">
             <div className="user-profile">
@@ -1074,9 +1108,65 @@ export default function AdminDashboardPage() {
                 )}
               </div>
             </>
-          ) : (
+          ) : activeView === 'settings' ? (
+            <div className="table-section" style={{ padding: '30px' }}>
+              <div className="table-header" style={{ borderBottom: 'none', paddingLeft: 0 }}>
+                <h3>Upload Settings</h3>
+              </div>
+
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const res = await fetch('/api/app-version', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uploadLimit }),
+                  });
+                  if (res.ok) {
+                    setError('');
+                    alert('Upload limit updated successfully!');
+                  } else {
+                    setError('Failed to update upload limit');
+                  }
+                } catch (err) {
+                  setError('Failed to update upload limit');
+                }
+              }} style={{ maxWidth: '400px' }}>
+                <div className="form-group">
+                  <label>Song Upload Limit (MB)</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <input
+                      type="number"
+                      min="1"
+                      max="40"
+                      value={uploadLimit}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val)) {
+                          setUploadLimit(Math.min(40, Math.max(1, val)));
+                        } else if (e.target.value === '') {
+                          setUploadLimit(1);
+                        }
+                      }}
+                      placeholder="40"
+                      required
+                      style={{ width: '100px' }}
+                    />
+                    <span style={{ color: 'var(--dash-text-secondary)' }}>MB</span>
+                  </div>
+                  <small style={{ color: 'var(--dash-text-secondary)', marginTop: '8px', display: 'block' }}>
+                    Maximum file size for song uploads. Affects all admins. (Range: 1-40 MB)
+                  </small>
+                </div>
+                
+                <button type="submit" className="submit-btn" style={{ marginTop: '20px' }}>
+                  <FontAwesomeIcon icon={faCheck} /> Save Settings
+                </button>
+              </form>
+            </div>
+          ) : activeView === 'mobile' ? (
             <AppVersionManager isSuperAdmin={isSuperAdmin} />
-          )}
+          ) : null}
         </main>
       </div>
 

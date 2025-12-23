@@ -9,6 +9,7 @@ export interface IAppVersion extends Document {
   forceUpdate: boolean;
   isActive: boolean;
   downloadCount: number;
+  uploadLimit: number; // Upload limit in MB
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +50,10 @@ const AppVersionSchema = new Schema<IAppVersion>(
     downloadCount: {
       type: Number,
       default: 0,
+    },
+    uploadLimit: {
+      type: Number,
+      default: 40, // 40 MB default
     },
   },
   {
