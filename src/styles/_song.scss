@@ -60,6 +60,11 @@
   animation: rotation 30s infinite linear;
 }
 
+.song-paused {
+  animation: rotation 30s infinite linear;
+  animation-play-state: paused;
+}
+
 @keyframes rotation {
   from {
     transform: rotate(0deg);

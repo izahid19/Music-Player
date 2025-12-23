@@ -5,22 +5,21 @@
     width: 24rem;
     height: 100%;
     box-shadow: -2px 2px 50px var(--shadow-color);
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
     background: var(--bg-color);
     transform: translateX(100%);
     transition: all 0.5s ease;
     z-index: 50;
+    display: flex;
+    flex-direction: column;
 
     .library-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      top: 0;
       background: var(--bg-color);
-      z-index: 100;
       padding-right: 1.5rem;
+      flex-shrink: 0;
       
       h2 {
         padding: 2rem;
@@ -46,7 +45,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 100;
         pointer-events: auto !important;
         
         svg {
@@ -65,13 +63,11 @@
     }
 
     .search-container {
-      padding: 0 2rem 2rem 2rem;
-      position: sticky;
-      top: 72px;
+      padding: 0 2rem 1.5rem 2rem;
       background: var(--bg-color);
-      z-index: 10;
       display: flex;
       align-items: center;
+      flex-shrink: 0;
 
       input {
         width: 100%;
@@ -97,6 +93,12 @@
         pointer-events: none;
       }
     }
+
+    .library-songs {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
   }
   
   .library-song {
@@ -105,6 +107,8 @@
     cursor: pointer;
     transition: background 0.5s ease;
     padding: 1rem 2rem 1rem 2rem;
+    position: relative;
+    z-index: 1;
     img {
       width: 30%;
     }
@@ -173,9 +177,52 @@
       width: 100%;
       z-index: 20; // Ensure it's on top
       
-      .library-header svg {
-        margin-left: 1.5rem;
-        margin-right: 2rem; // Keep it from touching the edge
+      .library-header {
+        h2 {
+          padding: 1.25rem 1.5rem;
+        }
+        
+        svg {
+          margin-left: 1rem;
+          margin-right: 1.5rem;
+        }
+      }
+
+      .search-container {
+        padding: 0 1.5rem 1rem 1.5rem;
+
+        .search-icon {
+          left: 2.3rem;
+        }
+      }
+    }
+    
+    .library-song {
+      padding: 0.75rem 1.5rem;
+      
+      img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 6px;
+      }
+    }
+    
+    .song-description {
+      padding-left: 0.75rem;
+      
+      h3 {
+        font-size: 0.9rem;
+      }
+      
+      h4 {
+        font-size: 0.65rem;
+      }
+      
+      .popular-tag {
+        font-size: 0.55rem;
+        padding: 2px 6px;
+        margin-left: 6px;
       }
     }
   }

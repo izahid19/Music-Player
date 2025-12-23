@@ -9,7 +9,7 @@ const Song = ({ currentSong, isPlaying, favorites, toggleFavorite }) => {
   return (
     <div className="song-container">
       <img
-        className={isPlaying ? "song-playing" : ""}
+        className={isPlaying ? "song-playing" : "song-paused"}
         alt={currentSong?.name}
         src={currentSong?.cover}
       />

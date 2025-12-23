@@ -72,7 +72,7 @@ const initialFormData: SongFormData = {
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeView, setActiveView] = useState<'songs' | 'mobile'>('songs');
+  const [activeView, setActiveView] = useState<'songs' | 'lofi' | 'mobile'>('songs');
   const [songs, setSongs] = useState<Song[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -102,6 +102,20 @@ export default function AdminDashboardPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [downloadCount, setDownloadCount] = useState(0);
 
+  // Lofi songs state
+  const [lofiSongs, setLofiSongs] = useState<Song[]>([]);
+  const [lofiPagination, setLofiPagination] = useState<Pagination>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    totalStreams: 0,
+  });
+  const [lofiLoading, setLofiLoading] = useState(false);
+  const [lofiSearchQuery, setLofiSearchQuery] = useState('');
+  const [lofiSearchInput, setLofiSearchInput] = useState('');
+  const lofiSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const isSuperAdmin = adminRole === 'super_admin';
 
   const fetchSongs = useCallback(async (page: number = 1, search: string = '') => {
@@ -125,6 +139,30 @@ export default function AdminDashboardPage() {
       setError('Failed to load songs');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const fetchLofiSongs = useCallback(async (page: number = 1, search: string = '') => {
+    setLofiLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '10',
+      });
+      if (search) {
+        params.append('search', search);
+      }
+
+      const response = await fetch(`/api/lofi-songs?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch lofi songs');
+      
+      const data = await response.json();
+      setLofiSongs(data.songs || []);
+      setLofiPagination(data.pagination || { page: 1, limit: 10, total: 0, totalPages: 0, totalStreams: 0 });
+    } catch (err) {
+      setError('Failed to load lofi songs');
+    } finally {
+      setLofiLoading(false);
     }
   }, []);
 
@@ -313,7 +351,9 @@ export default function AdminDashboardPage() {
     setError('');
 
     try {
-      const url = editingId ? `/api/songs/${editingId}` : '/api/songs';
+      // Use different API endpoint based on active view
+      const apiBase = activeView === 'lofi' ? '/api/lofi-songs' : '/api/songs';
+      const url = editingId ? `${apiBase}/${editingId}` : apiBase;
       const method = editingId ? 'PUT' : 'POST';
 
       // Generate random colors for new songs, keep existing colors for edits
@@ -333,7 +373,12 @@ export default function AdminDashboardPage() {
         throw new Error(data.error || 'Failed to save song');
       }
 
-      await fetchSongs(pagination.page, searchQuery);
+      // Refresh the appropriate list
+      if (activeView === 'lofi') {
+        await fetchLofiSongs(lofiPagination.page, lofiSearchQuery);
+      } else {
+        await fetchSongs(pagination.page, searchQuery);
+      }
       closeModal();
     } catch (err: any) {
       setError(err.message);
@@ -440,7 +485,7 @@ export default function AdminDashboardPage() {
                     <span>Home</span>
                   </button>
                 </Link>
-                <h1 style={{ margin: 0 }}>{activeView === 'songs' ? 'Music Library' : 'Mobile App Settings'}</h1>
+                <h1 style={{ margin: 0 }}>{activeView === 'songs' ? 'Music Library' : activeView === 'lofi' ? 'Lofi Music Library' : 'Mobile App Settings'}</h1>
                 <div className="view-switcher" style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px' }}>
                     <button 
                         onClick={() => setActiveView('songs')}
@@ -461,6 +506,30 @@ export default function AdminDashboardPage() {
                     >
                         <FontAwesomeIcon icon={faMusic} size="sm"/> Music
                     </button>
+                    {isSuperAdmin && (
+                      <button 
+                          onClick={() => {
+                            setActiveView('lofi');
+                            if (lofiSongs.length === 0) fetchLofiSongs(1, '');
+                          }}
+                          style={{
+                              background: activeView === 'lofi' ? 'var(--accent-color)' : 'transparent',
+                              color: activeView === 'lofi' ? 'white' : 'var(--text-secondary)',
+                              border: 'none',
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              fontWeight: '600',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                          }}
+                      >
+                          <FontAwesomeIcon icon={faHeadphones} size="sm"/> Lofi
+                      </button>
+                    )}
                     <button 
                          onClick={() => setActiveView('mobile')}
                          style={{
@@ -482,7 +551,7 @@ export default function AdminDashboardPage() {
                     </button>
                 </div>
             </div>
-            <p>{activeView === 'songs' ? 'Manage your music collection' : 'Manage app versions and downloads'}</p>
+            <p>{activeView === 'songs' ? 'Manage your music collection' : activeView === 'lofi' ? 'Manage lofi/chill music (Super Admin only)' : 'Manage app versions and downloads'}</p>
           </div>
           <div className="header-actions">
             <div className="user-profile">
@@ -752,6 +821,250 @@ export default function AdminDashboardPage() {
                           className="pagination-btn"
                           onClick={() => handlePageChange(pagination.page + 1)}
                           disabled={pagination.page >= pagination.totalPages}
+                        >
+                          <FontAwesomeIcon icon={faChevronRight} />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </>
+          ) : activeView === 'lofi' ? (
+            <>
+              {/* Lofi Stats Row */}
+              <div className="stats-row">
+                <div className="stat-card">
+                  <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
+                    <FontAwesomeIcon icon={faHeadphones} style={{ color: 'white' }} />
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-value">{lofiPagination.total}</span>
+                    <span className="stat-label">Lofi Songs</span>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon accent">
+                    <FontAwesomeIcon icon={faMusic} />
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-value">{lofiPagination.totalStreams.toLocaleString()}</span>
+                    <span className="stat-label">Total Streams</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Action */}
+              <div className="quick-action">
+                <button className="add-song-btn" onClick={() => { setEditingId(null); setFormData(initialFormData); setShowModal(true); }} style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
+                  <FontAwesomeIcon icon={faPlus} />
+                  <span>Add Lofi Song</span>
+                </button>
+              </div>
+
+              {/* Lofi Songs Table */}
+              <div className="table-section">
+                <div className="table-header">
+                  <h3>Lofi Music Library</h3>
+                  <div className="table-controls">
+                    <div className="search-box">
+                      <FontAwesomeIcon icon={faSearch} />
+                      <input
+                        type="text"
+                        placeholder="Search lofi songs..."
+                        value={lofiSearchInput}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setLofiSearchInput(value);
+                          if (lofiSearchTimeoutRef.current) clearTimeout(lofiSearchTimeoutRef.current);
+                          lofiSearchTimeoutRef.current = setTimeout(() => {
+                            setLofiSearchQuery(value);
+                            fetchLofiSongs(1, value);
+                          }, 300);
+                        }}
+                      />
+                    </div>
+                    <span className="song-count">{lofiPagination.total} songs</span>
+                  </div>
+                </div>
+
+                {lofiLoading ? (
+                  <>
+                    {/* Desktop Skeleton */}
+                    <div className="table-container desktop-only">
+                      <table className="songs-table">
+                        <thead>
+                          <tr>
+                            <th>Song Name</th>
+                            <th>Artist</th>
+                            <th>Plays</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[1, 2, 3, 4, 5].map((i) => (
+                            <tr key={i} className="skeleton-row">
+                              <td>
+                                <div className="skeleton-cell">
+                                  <div className="skeleton skeleton-thumb"></div>
+                                  <div className="skeleton skeleton-text"></div>
+                                </div>
+                              </td>
+                              <td><div className="skeleton skeleton-text-short"></div></td>
+                              <td><div className="skeleton skeleton-badge"></div></td>
+                              <td>
+                                <div className="skeleton-actions">
+                                  <div className="skeleton skeleton-btn"></div>
+                                  <div className="skeleton skeleton-btn"></div>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Skeleton */}
+                    <div className="cards-container mobile-only">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div className="song-card skeleton-card" key={i}>
+                          <div className="card-top">
+                            <div className="skeleton skeleton-cover"></div>
+                            <div className="card-info">
+                              <div className="skeleton skeleton-title"></div>
+                              <div className="skeleton skeleton-subtitle"></div>
+                              <div className="skeleton skeleton-badge"></div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : lofiSongs.length === 0 ? (
+                  <div className="empty-state">
+                    <FontAwesomeIcon icon={faHeadphones} size="2x" />
+                    <h4>{lofiSearchQuery ? 'No lofi songs found' : 'No lofi songs yet'}</h4>
+                    <p>{lofiSearchQuery ? 'Try a different search term' : 'Click "Add Lofi Song" to get started'}</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="table-container desktop-only">
+                      <table className="songs-table">
+                        <thead>
+                          <tr>
+                            <th>Song Name</th>
+                            <th>Artist</th>
+                            <th>Plays</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {lofiSongs.map((song) => (
+                            <tr key={song.id}>
+                              <td>
+                                <div className="song-cell">
+                                  <img src={song.cover} alt={song.name} className="song-thumb" />
+                                  <span>{song.name}</span>
+                                </div>
+                              </td>
+                              <td>{song.artist}</td>
+                              <td>
+                                <span className="play-count-badge">{song.playCount || 0}</span>
+                              </td>
+                              <td>
+                                <div className="action-btns">
+                                  <button className="action-btn edit" onClick={() => {
+                                    setEditingId(song.id);
+                                    setFormData({
+                                      name: song.name,
+                                      artist: song.artist,
+                                      cover: song.cover,
+                                      audio: song.audio,
+                                      color: song.color,
+                                      playCount: song.playCount || 0,
+                                    });
+                                    setShowModal(true);
+                                  }}>
+                                    <FontAwesomeIcon icon={faEdit} /> Edit
+                                  </button>
+                                  <button className="action-btn delete" onClick={async () => {
+                                    if (confirm('Delete this lofi song?')) {
+                                      await fetch(`/api/lofi-songs/${song.id}`, { method: 'DELETE' });
+                                      fetchLofiSongs(lofiPagination.page, lofiSearchQuery);
+                                    }
+                                  }}>
+                                    <FontAwesomeIcon icon={faTrash} /> Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="cards-container mobile-only">
+                      {lofiSongs.map((song) => (
+                        <div className="song-card" key={song.id}>
+                          <div className="card-top">
+                            <img src={song.cover} alt={song.name} className="card-cover" />
+                            <div className="card-info">
+                              <h4 className="card-title">{song.name}</h4>
+                              <p className="card-artist">{song.artist}</p>
+                              <span className="mobile-play-count">
+                                <FontAwesomeIcon icon={faMusic} size="xs" /> {song.playCount || 0} plays
+                              </span>
+                            </div>
+                          </div>
+                          <div className="card-actions">
+                            <button className="action-btn edit" onClick={() => {
+                              setEditingId(song.id);
+                              setFormData({
+                                name: song.name,
+                                artist: song.artist,
+                                cover: song.cover,
+                                audio: song.audio,
+                                color: song.color,
+                                playCount: song.playCount || 0,
+                              });
+                              setShowModal(true);
+                            }}>
+                              <FontAwesomeIcon icon={faEdit} /> Edit
+                            </button>
+                            <button className="action-btn delete" onClick={async () => {
+                              if (confirm('Delete this lofi song?')) {
+                                await fetch(`/api/lofi-songs/${song.id}`, { method: 'DELETE' });
+                                fetchLofiSongs(lofiPagination.page, lofiSearchQuery);
+                              }
+                            }}>
+                              <FontAwesomeIcon icon={faTrash} /> Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {lofiPagination.totalPages > 1 && (
+                      <div className="pagination">
+                        <button
+                          className="pagination-btn"
+                          onClick={() => fetchLofiSongs(lofiPagination.page - 1, lofiSearchQuery)}
+                          disabled={lofiPagination.page <= 1}
+                        >
+                          <FontAwesomeIcon icon={faChevronLeft} />
+                        </button>
+                        
+                        <div className="pagination-info">
+                          <span>Page {lofiPagination.page} of {lofiPagination.totalPages}</span>
+                        </div>
+
+                        <button
+                          className="pagination-btn"
+                          onClick={() => fetchLofiSongs(lofiPagination.page + 1, lofiSearchQuery)}
+                          disabled={lofiPagination.page >= lofiPagination.totalPages}
                         >
                           <FontAwesomeIcon icon={faChevronRight} />
                         </button>

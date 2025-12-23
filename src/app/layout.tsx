@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   keywords: ["music player", "react", "nextjs", "spotify alternative", "audio player", "playyly"],
   authors: [{ name: "Playyly" }],
   icons: {
-    icon: "/favicon.png",
-    apple: "/favicon.png",
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
   },
   openGraph: {
     title: "Playyly | Modern Music Player",

@@ -26,8 +26,8 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // Check if accessing admin dashboard
-  if (pathname.startsWith('/admin/dashboard')) {
+  // Check if accessing admin dashboard or apidoc
+  if (pathname.startsWith('/admin/dashboard') || pathname.startsWith('/apidoc')) {
     const token = request.cookies.get('admin_token')?.value;
     
     // If no token, redirect to login
@@ -48,5 +48,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/dashboard/:path*', '/api/:path*'],
+  matcher: ['/admin/dashboard/:path*', '/apidoc', '/apidoc/:path*', '/api/:path*'],
 };
+
