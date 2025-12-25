@@ -37,7 +37,6 @@ const Library: React.FC<LibraryProps> = ({
   }) : [];
 
   const handleClose = () => {
-    console.log('Close button clicked');
     setLibraryStatus(false);
   };
 
