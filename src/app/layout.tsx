@@ -8,17 +8,38 @@ const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://playyly.vercel.app'),
-  title: "Playyly | Modern Music Player",
-  description: "A beautiful, interactive music player built with React. Features dark mode, real-time search, library management, and smooth playback controls.",
-  keywords: ["music player", "react", "nextjs", "spotify alternative", "audio player", "playyly"],
-  authors: [{ name: "Playyly" }],
+  title: {
+    default: "Playyly | Modern Music Player - Free Online Streaming",
+    template: "%s | Playyly",
+  },
+  description: "A beautiful, interactive music player built with React and Next.js. Features dark mode, real-time search, library management, shuffle, favorites, and smooth playback controls. Stream music free online.",
+  keywords: [
+    "music player",
+    "free music streaming",
+    "online music player",
+    "web music app",
+    "react music player",
+    "nextjs music app",
+    "spotify alternative",
+    "audio player",
+    "playyly",
+    "dark mode music player",
+    "music library",
+    "playlist manager"
+  ],
+  authors: [{ name: "Zahid", url: "https://devzahid.vercel.app/" }],
+  creator: "Zahid",
+  publisher: "Playyly",
   icons: {
     icon: "/favicon.ico",
     apple: "/favicon.ico",
   },
+  alternates: {
+    canonical: 'https://playyly.vercel.app',
+  },
   openGraph: {
-    title: "Playyly | Modern Music Player",
-    description: "A beautiful, interactive music player with dark mode, library management, and smooth playback controls.",
+    title: "Playyly | Modern Music Player - Free Online Streaming",
+    description: "A beautiful, interactive music player with dark mode, library management, shuffle, favorites, and smooth playback controls. Stream music free.",
     url: "https://playyly.vercel.app",
     siteName: "Playyly",
     images: [
@@ -26,7 +47,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Playyly Music Player",
+        alt: "Playyly - Modern Music Player with Dark Mode",
       },
     ],
     locale: "en_US",
@@ -35,13 +56,22 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Playyly | Modern Music Player",
-    description: "A beautiful, interactive music player with dark mode and smooth playback controls.",
+    description: "A beautiful, interactive music player with dark mode, shuffle, and smooth playback controls. Stream music free online.",
     images: ["/og-image.png"],
+    creator: "@devzahid",
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
+  category: 'music',
 };
 
 export default function RootLayout({
