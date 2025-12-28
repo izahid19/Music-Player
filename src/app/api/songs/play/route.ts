@@ -65,7 +65,7 @@ export async function POST(request: Request) {
              await existingSuggestion.save();
         } else {
              // Create new suggestion
-             await SongSuggestion.create({
+             const newSuggestion = await SongSuggestion.create({
               name: jiosaavnSong.name,
               artist: jiosaavnSong.artist,
               cover: jiosaavnSong.cover,
@@ -75,6 +75,18 @@ export async function POST(request: Request) {
               count: 1,
               status: 'pending'
             });
+
+            // Send Telegram Notification
+            try {
+              const { sendSuggestionNotification } = await import('@/lib/telegram');
+              const suggestionData = newSuggestion.toObject();
+              await sendSuggestionNotification({ 
+                  ...suggestionData, 
+                  _id: suggestionData._id.toString() 
+              });
+            } catch (err) {
+              console.error('Failed to send telegram notification', err);
+            }
         }
 
         // Return success but NO songId (so frontend keeps treating it as external)
