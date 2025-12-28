@@ -27,6 +27,7 @@ import {
   faDownload,
   faHome,
   faCog,
+  faLightbulb,
 } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
 import { defaultCoverImages } from '@/util';
@@ -62,6 +63,16 @@ interface SongFormData {
   playCount: number;
 }
 
+interface Suggestion {
+  _id: string;
+  name: string;
+  artist: string;
+  cover: string;
+  audio: string;
+  count: number;
+  createdAt: string;
+}
+
 const initialFormData: SongFormData = {
   name: '',
   artist: '',
@@ -73,7 +84,7 @@ const initialFormData: SongFormData = {
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeView, setActiveView] = useState<'songs' | 'lofi' | 'mobile' | 'settings'>('songs');
+  const [activeView, setActiveView] = useState<'songs' | 'lofi' | 'mobile' | 'settings' | 'suggestions'>('songs');
   const [songs, setSongs] = useState<Song[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -117,6 +128,10 @@ export default function AdminDashboardPage() {
   const [lofiSearchQuery, setLofiSearchQuery] = useState('');
   const [lofiSearchInput, setLofiSearchInput] = useState('');
   const lofiSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
 
   const isSuperAdmin = adminRole === 'super_admin';
 
@@ -168,6 +183,48 @@ export default function AdminDashboardPage() {
     }
   }, []);
 
+  const fetchSuggestions = useCallback(async () => {
+    setSuggestionsLoading(true);
+    try {
+      const response = await fetch('/api/admin/suggestions');
+      const data = await response.json();
+      if (data.success) {
+        setSuggestions(data.suggestions);
+      }
+    } catch (err) {
+      console.error('Failed to load suggestions');
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  }, []);
+
+  const handleApproveSuggestion = async (id: string) => {
+      try {
+          const res = await fetch(`/api/admin/suggestions/${id}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'approve' })
+          });
+          if (res.ok) {
+              await fetchSuggestions();
+              await fetchSongs(1, searchQuery);
+          } else {
+             const d = await res.json();
+             setError(d.error || 'Failed to approve');
+          }
+      } catch (e) {
+          setError('Failed to approve');
+      }
+  };
+
+  const handleRejectSuggestion = async (id: string) => {
+       if (!confirm('Reject this suggestion?')) return;
+       try {
+           const res = await fetch(`/api/admin/suggestions/${id}`, { method: 'DELETE' });
+           if (res.ok) await fetchSuggestions();
+       } catch (e) { setError('Failed to reject'); }
+  };
+
   useEffect(() => {
     // Check authentication via API (httpOnly cookie is not readable by JS)
     const checkAuthAndLoad = async () => {
@@ -184,9 +241,14 @@ export default function AdminDashboardPage() {
         // Set admin email and role
         setAdminEmail(authData.email);
         setAdminRole(authData.role || 'admin');
+        const isSuper = (authData.role === 'super_admin');
         
         // Load songs
         fetchSongs(1, '');
+
+        if (isSuper) {
+            fetchSuggestions();
+        }
         
         // Load download count and upload limit
         try {
@@ -562,6 +624,31 @@ export default function AdminDashboardPage() {
                     >
                         <FontAwesomeIcon icon={faMobileAlt} size="sm"/> App
                     </button>
+                    {isSuperAdmin && (
+                      <button 
+                          onClick={() => {
+                            setActiveView('suggestions');
+                            fetchSuggestions();
+                          }}
+                          style={{
+                              background: activeView === 'suggestions' ? 'var(--accent-color)' : 'transparent',
+                              color: activeView === 'suggestions' ? 'white' : 'var(--text-secondary)',
+                              border: 'none',
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              fontWeight: '600',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                          }}
+                      >
+                          <FontAwesomeIcon icon={faLightbulb} size="sm"/> Suggestions
+                          {suggestions.length > 0 && <span style={{ background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '10px', fontSize: '0.7em' }}>{suggestions.length}</span>}
+                      </button>
+                    )}
                     {isSuperAdmin && (
                       <button 
                           onClick={() => setActiveView('settings')}
@@ -1164,6 +1251,61 @@ export default function AdminDashboardPage() {
                 </button>
               </form>
             </div>
+
+          ) : activeView === 'suggestions' ? (
+              <div className="table-section" style={{ padding: '0' }}>
+               <div className="table-header" style={{ padding: '20px' }}>
+                 <h3>Song Suggestions</h3>
+                 <span className="song-count">{suggestions.length} pending</span>
+               </div>
+               
+               {suggestionsLoading ? (
+                 <div style={{ padding: '40px', textAlign: 'center' }}><FontAwesomeIcon icon={faSpinner} spin size="2x"/></div>
+               ) : suggestions.length === 0 ? (
+                 <div className="empty-state">
+                   <FontAwesomeIcon icon={faCheck} size="2x" style={{ color: '#22c55e' }}/>
+                   <h4>All caught up!</h4>
+                   <p>No pending song suggestions.</p>
+                 </div>
+               ) : (
+                <div className="table-container">
+                 <table className="songs-table">
+                   <thead>
+                     <tr>
+                       <th>Song</th>
+                       <th>Artist</th>
+                       <th>Count</th>
+                       <th>Actions</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {suggestions.map(s => (
+                       <tr key={s._id}>
+                         <td>
+                           <div className="song-cell">
+                             <img src={s.cover} className="song-thumb" alt={s.name} />
+                             <span>{s.name}</span>
+                           </div>
+                         </td>
+                         <td>{s.artist}</td>
+                         <td>{s.count} requests</td>
+                         <td>
+                            <div className="action-btns">
+                               <button className="action-btn" style={{ color: '#22c55e', background: 'rgba(34,197,94,0.1)' }} onClick={() => handleApproveSuggestion(s._id)}>
+                                 <FontAwesomeIcon icon={faCheck}/> Approve
+                               </button>
+                               <button className="action-btn delete" onClick={() => handleRejectSuggestion(s._id)}>
+                                 <FontAwesomeIcon icon={faTrash}/> Reject
+                               </button>
+                            </div>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+                </div>
+               )}
+              </div>
           ) : activeView === 'mobile' ? (
             <AppVersionManager isSuperAdmin={isSuperAdmin} />
           ) : null}

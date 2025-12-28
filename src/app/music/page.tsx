@@ -16,6 +16,10 @@ interface Song {
   audio: string;
   color: [string, string];
   active: boolean;
+  source?: 'local' | 'jiosaavn';
+  album?: string;
+  duration?: number;
+  year?: string;
 }
 
 function MusicPlayer() {
@@ -115,6 +119,27 @@ function MusicPlayer() {
       setFavorites([...favorites, songId]);
     }
   };
+
+  // Handle playing JioSaavn songs
+  const handleJioSaavnPlay = (song: Song) => {
+    // Set the JioSaavn song as current song
+    const jioSaavnSong = {
+      ...song,
+      active: true,
+      source: 'jiosaavn' as const,
+    };
+    setCurrentSong(jioSaavnSong);
+    
+    // Play the song
+    setTimeout(() => {
+      if (audioRef.current) {
+        audioRef.current.play().catch(e => console.log('JioSaavn playback error:', e));
+        setIsPlaying(true);
+      }
+    }, 100);
+  };
+  
+
 
   // Sync volume with audio element
   useEffect(() => {
@@ -263,12 +288,37 @@ function MusicPlayer() {
   useEffect(() => {
     if (!currentSong) return;
 
-    // Increment play count
+    // Increment play count (and save to DB if external song)
+    const playData: any = { songId: currentSong.id };
+    
+    // If it's a JioSaavn song, send full song data so it can be saved to database
+    const isExternalSong = 
+      currentSong.source === 'jiosaavn' || 
+      currentSong.id?.startsWith('jiosaavn_');
+      
+    if (isExternalSong) {
+      playData.jiosaavnSong = {
+        name: currentSong.name,
+        artist: currentSong.artist,
+        cover: currentSong.cover,
+        audio: currentSong.audio,
+        color: currentSong.color,
+      };
+    }
+    
     fetch('/api/songs/play', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ songId: currentSong.id }),
-    }).catch(console.error);
+        body: JSON.stringify(playData),
+    })
+    .then(res => res.json())
+    .then(data => {
+      // If the song was saved to database, update localStorage with the new DB ID
+      if (data.success && data.songId && isExternalSong) {
+        localStorage.setItem('musicPlayerSongId', data.songId);
+      }
+    })
+    .catch(console.error);
 
     setSongs((prevSongs: Song[]) => {
       return prevSongs.map((song) => ({
@@ -418,6 +468,7 @@ function MusicPlayer() {
         libraryStatus={libraryStatus}
         setLibraryStatus={setLibraryStatus}
         favorites={favorites}
+        onJioSaavnPlay={handleJioSaavnPlay}
       />
       <audio
         onTimeUpdate={timeUpdateHandler}

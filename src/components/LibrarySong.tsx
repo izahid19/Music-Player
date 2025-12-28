@@ -2,7 +2,37 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart } from '@fortawesome/free-solid-svg-icons';
 
-const LibrarySong = ({
+interface Song {
+  id: string;
+  name: string;
+  artist: string;
+  cover: string;
+  audio: string;
+  color: [string, string];
+  active: boolean;
+  source?: 'local' | 'jiosaavn';
+}
+
+interface LibrarySongProps {
+  name: string;
+  artist: string;
+  cover: string;
+  id: string;
+  setCurrentSong: (song: Song) => void;
+  songs: Song[];
+  audioRef: React.RefObject<HTMLAudioElement>;
+  isPlaying: boolean;
+  setSongs: (songs: Song[]) => void;
+  setIsPlaying: (isPlaying: boolean) => void;
+  active: boolean;
+  isFavorite: boolean;
+  isPopular: boolean;
+  source?: 'local' | 'jiosaavn';
+  onExternalPlay?: () => void;
+  songData?: Song;
+}
+
+const LibrarySong: React.FC<LibrarySongProps> = ({
   name,
   artist,
   cover,
@@ -15,9 +45,19 @@ const LibrarySong = ({
   setIsPlaying,
   active,
   isFavorite,
-  isPopular
+  isPopular,
+  source = 'local',
+  onExternalPlay,
+  songData,
 }) => {
   const songSelectHandler = async () => {
+    // For JioSaavn songs, use the external play handler
+    if (source === 'jiosaavn' && onExternalPlay) {
+      onExternalPlay();
+      return;
+    }
+
+    // For local songs, use the existing logic
     const selectedSong = songs.filter((state) => state.id === id);
     await setCurrentSong(selectedSong[0]);
     // Active state logic
@@ -47,12 +87,12 @@ const LibrarySong = ({
   };
 
   return (
-    <div onClick={songSelectHandler} className={`library-song ${active ? 'selected' : ''}`}>
+    <div onClick={songSelectHandler} className={`library-song ${active ? 'selected' : ''} ${source === 'jiosaavn' ? 'jiosaavn-song' : ''}`}>
       <img src={cover} alt={name}></img>
       <div className="song-description">
         <h3>
             {name} 
-            {isPopular && (
+            {isPopular && source === 'local' && (
                 <span className="popular-tag">
                     🔥 Popular
                 </span>
@@ -68,3 +108,4 @@ const LibrarySong = ({
 };
 
 export default LibrarySong;
+

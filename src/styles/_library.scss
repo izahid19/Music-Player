@@ -226,4 +226,77 @@
       }
     }
   }
+
+  // JioSaavn Integration Styles
+  .library-section-header {
+    padding: 0.75rem 2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--hover-bg);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &.jiosaavn-header {
+      background: linear-gradient(135deg, rgba(0, 200, 83, 0.1) 0%, rgba(0, 150, 60, 0.1) 100%);
+      color: #00c853;
+      margin-top: 0.5rem;
+    }
+
+    .search-spinner {
+      color: #00c853;
+      font-size: 0.85rem;
+    }
+  }
+
+  .jiosaavn-tag {
+    font-size: 0.6rem;
+    margin-left: 8px;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #00c853 0%, #00962e 100%);
+    color: #fff;
+    font-weight: 700;
+    border-radius: 12px;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .jiosaavn-song {
+    background: rgba(0, 200, 83, 0.03);
+    
+    &:hover {
+      background: rgba(0, 200, 83, 0.08);
+    }
+  }
+
+  .jiosaavn-error,
+  .jiosaavn-no-results,
+  .library-empty {
+    padding: 1.5rem 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+
+  .jiosaavn-error {
+    color: #ef4444;
+  }
+
+
+
+  @media screen and (max-width: 1024px) {
+    .library-section-header {
+      padding: 0.6rem 1.5rem;
+      font-size: 0.8rem;
+    }
+
+    .jiosaavn-tag {
+      font-size: 0.5rem;
+      padding: 2px 6px;
+      margin-left: 6px;
+    }
+  }
   
